@@ -10,7 +10,7 @@ librarian::shelf(tidyverse, here, tidyverse, tidync, sf, raster, terra, ggtext, 
 ################################################################################
 #set directories and load data
 basedir <- "/Volumes/seaotterdb$/kelp_recovery/"
-figdir <- here::here("analyses","4patch_drivers","Figures")
+figdir <- here::here("analyses")
 
 #load standardized dat
 stan_dat <- read.csv(file.path(basedir, "data/subtidal_monitoring/processed/kelp_stan_CC.csv")) 

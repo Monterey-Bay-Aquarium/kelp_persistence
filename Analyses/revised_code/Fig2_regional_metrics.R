@@ -8,8 +8,8 @@ librarian::shelf(tidyverse, here, vegan, ggplot2, cluster, ggforce, reshape2)
 
 ################################################################################
 #set directories and load data
-figdir <- here::here("analyses","4patch_drivers","Figures")
-basedir <- here::here("analyses","4patch_drivers","Output")
+figdir <- here::here("figures")
+basedir <- here::here("output")
 
 #load multivariate data
 load(file.path(basedir, "multivariate_data.Rdata"))
