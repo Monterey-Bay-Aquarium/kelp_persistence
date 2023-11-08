@@ -1,6 +1,6 @@
 # kelp_persistence
 This is the GitHub repository for a project led by Monterey Bay Aquarium aimed at understanding the community-wide consequences of kelp forest loss and 
-the predictors of persistence through multiple stressors. The analyses and code in this respository support the findings presented in Smith et al. 2023. 
+the predictors of persistence through multiple stressors. The analyses and code in this respository support the findings presented in Smith et al. 2023 (in review)
 
 ## Respository structure 
 
