@@ -12,17 +12,17 @@ figdir <- here::here("figures")
 basedir <- here::here("output")
 
 #load multivariate data
-load(file.path(basedir, "multivariate_data.Rdata"))
+load(file.path(basedir, "monitoring_data/processed/multivariate_data.Rdata"))
 
 #load standardized data
-stan_dat <- read.csv(file.path(basedir, "kelp_stan_CC.csv")) 
+stan_dat <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_stan_CC.csv")) 
 
 #load raw dat
-fish_raw <- read.csv(file.path(basedir, "kelp_fish_counts_CC.csv")) 
+fish_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_fish_counts_CC.csv")) 
 
-upc_raw <- read.csv(file.path(basedir, "kelp_upc_cov_CC.csv")) 
+upc_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_upc_cov_CC.csv")) 
 
-swath_raw <- read.csv(file.path(basedir, "kelp_swath_counts_CC.csv")) %>%
+swath_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_swath_counts_CC.csv")) %>%
   #remove kelps -- we will handle them as their own group
   dplyr::select(-macrocystis_pyrifera,
                 -pterygophora_californica,
@@ -35,7 +35,7 @@ swath_raw <- read.csv(file.path(basedir, "kelp_swath_counts_CC.csv")) %>%
                 -laminaria_farlowii,
                 -pleurophycus_gardneri)
 
-kelp_raw <- read.csv(file.path(basedir, "kelp_swath_counts_CC.csv")) %>% 
+kelp_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_swath_counts_CC.csv")) %>% 
   #extract kelps as their own group              
           dplyr::select(1:11, macrocystis_pyrifera,
                               pterygophora_californica,
@@ -184,426 +184,83 @@ kelp_alphadiv <- cbind(kelp_groups, kelp_richness, kelp_shannon, kelp_simpson, k
   mutate(MHW = str_to_sentence(MHW),
          MHW = factor(MHW, levels=c("Before","During","After")))
 
-################################################################################
-#Step 4 determine spp that explain changes over time
-
-fish_join <- cbind(fish_alphadiv, fish_dat) %>% rename(richness=S.obs) %>%
-              #calculate annual mean
-              group_by(year)%>%
-              summarize(across(3:112,mean))
-
-fish_rich <- fish_join %>%
-  select(year, 7:111) %>%
-  mutate(across(2:106, ~ifelse(. > 0, 1, 0))) 
-
-# Create a data frame for species changes (added or lost)
-species_changes <- data.frame(year = numeric(0), species_added = character(0), species_lost = character(0))
-
-# Sort the data frame by year
-fish_rich <- fish_rich %>%
-  arrange(year)
-
-# Iterate through years starting from the second year (2008)
-for (i in 2:nrow(fish_rich)) {
-  current_year <- fish_rich$year[i]
-  previous_year <- fish_rich$year[i - 1]
-  
-  current_species <- fish_rich[i, 3:106]  # Exclude the year column from comparison
-  previous_species <- fish_rich[i - 1, 3:106]
-  
-  species_added <- colnames(current_species)[current_species > previous_species]
-  species_lost <- colnames(previous_species)[previous_species > current_species]
-  
-  species_changes <- rbind(species_changes, data.frame(year = current_year, species_added = paste(species_added, collapse = ", "), species_lost = paste(species_lost, collapse = ", ")))
-}
-
-# Print or work with species_changes to see which species were added or lost each year relative to the previous year
-print(species_changes)
-
-
-# Reshape the data to long format
-fish_rich_long <- fish_rich %>%
-  pivot_longer(cols = -year, names_to = "species", values_to = "presence")
-
-# Filter out species that were never observed (presence == 0) in any year
-fish_rich_filtered <- fish_rich_long %>%
-  group_by(species) %>%
-  filter(any(presence == 1))
-
-# Calculate richness (number of species observed) for each year based on the filtered dataset
-richness_data <- fish_rich_filtered %>%
-  group_by(year) %>%
-  summarize(richness = sum(presence))
-
-# Filter out species that were observed in ALL years
-fish_rich_reduced <- fish_rich_filtered %>%
-  group_by(species) %>%
-  filter(sum(presence) != n_distinct(year))
-
-# Create a heatmap
-g <- ggplot(data = fish_rich_reduced, aes(x = year, y = species, fill = factor(presence))) +
-  geom_tile() +
-  scale_fill_manual(values = c("0" = "white", "1" = "green"), labels = c("0" = "Absent", "1" = "Present")) +
-  labs(title = "Species Presence/Absence Over Years", x = "Year", y = "Species") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-
-
-# Create a colored line plot with a gradient color transition between years
-ggplot(data = richness_data, aes(x = year, y = 0, color = richness)) +
-  geom_line(size = 20, aes(group = 1)) +
-  labs(title = "Richness Over Years", x = "Year", y = NULL) +
-  scale_color_gradientn(
-    colors = c("navyblue", "indianred"),
-    values = scales::rescale(c(min(richness_data$year), max(richness_data$year))),
-    guide = "none"
-  ) +  # Adjust the gradient colors and values as needed
-  theme_minimal()
 
 ################################################################################
-#Step 5 - examine site cohesion and distance changes over time
+#Step 4 - examine site cohesion and distance changes over time
 
-stan_group_vars2 <- stan_group_vars %>% mutate(period = ifelse(year < 2013,"Before","After"))
+
+stan_group_vars2 <- stan_group_vars %>% mutate(period = ifelse(year < 2013,"Before","After"),
+                                               site_period = paste(site, period),
+                                               year_site_period = paste(year, site, period)) %>% data.frame()
+
+# Set row and column names in stan_max_distmat
+stan_max_distmat2 <- usedist::dist_setNames(stan_max_distmat, stan_group_vars2$year_site_period)
+
 
 #use betadisper to reduce vegdist to principal coords
-disper_mat <- betadisper(stan_max_distmat, type="centroid",
-                         group = stan_group_vars2$period)
-
-plot(disper_mat)
+disper_mat <- betadisper(stan_max_distmat2, type="centroid",
+                         group = stan_group_vars2$site_period)
 
 
-
-
-
-shift_dist <- reshape2::melt(as.matrix(sqrt(dist(disper_mat$centroids[,disper_mat$eig>0]^2)-
-                                        dist(disper_mat$centroids[,disper_mat$eig<0]^2))))%>%
-            tibble::rownames_to_column("distance")
-
-
-
-
-
-
-
-
-
-
-# get betadisper dataframes ####
-# have written functions to grab the necessary data from the betadisper object
-
-# functions ####
-# getting distances from betadisper() object
-betadisper_distances <- function(model){
-  temp <- data.frame(group = model$group)
-  temp2 <- data.frame(distances = unlist(model$distances))
-  temp2$sample <- row.names(temp2)
-  temp <- cbind(temp, temp2)
-  temp <- dplyr::select(temp, group, sample, dplyr::everything())
-  row.names(temp) <- NULL
-  return(temp)
-}
-
-# getting eigenvalues out of betadisper() object
-betadisper_eigenvalue <- function(model){
-  temp <- data.frame(eig = unlist(model$eig))
-  temp$PCoA <- row.names(temp)
-  row.names(temp) <- NULL
-  return(temp)
-}
-
-# getting the eigenvectors out of a betadisper() object
-betadisper_eigenvector <- function(model){
-  temp <- data.frame(group = model$group)
-  temp2 <- data.frame(unlist(model$vectors))
-  temp2$sample <- row.names(temp2)
-  temp <- cbind(temp, temp2)
-  temp <- dplyr::select(temp, group, sample, dplyr::everything())
-  row.names(temp) <- NULL
-  return(temp)
-}
-
-# get centroids
-betadisper_centroids <- function(model){
-  temp <- data.frame(unlist(model$centroids))
-  temp$group <- row.names(temp)
-  temp <- dplyr::select(temp, group, dplyr::everything())
-  row.names(temp) <- NULL
-  return(temp)
-}
-
-# betadisper data
-get_betadisper_data <- function(model){
-  temp <- list(distances = betadisper_distances(model),
-               eigenvalue = betadisper_eigenvalue(model),
-               eigenvector = betadisper_eigenvector(model),
-               centroids = betadisper_centroids(model))
-  return(temp)
-}
-
-dist_explore <- betadisper_distances(disper_mat)
-
-betadisper_dat <- get_betadisper_data(disper_mat)
-
-# combine centroid and eigenvector dataframes for plotting
-betadisper_lines <- merge(dplyr::select(betadisper_dat$centroids, group, PCoA1, PCoA2), 
-                          dplyr::select(betadisper_dat$eigenvector, group, PCoA1, PCoA2), by = c('group')) %>%
-  mutate(distance = sqrt((PCoA1.x - PCoA1.y)^2 + (PCoA2.x - PCoA2.y)^2))
-
-
-
-# do some transformations on the data
-#betadisper_dat$eigenvalue <- mutate(betadisper_dat$eigenvalue, percent = eig/sum(eig))
-
-
-
-
-# add convex hull points ####
-# this could be put in a function
-betadisper_dat$chull <- group_by(betadisper_dat$eigenvector, group) %>%
-  do(data.frame(PCoA1 = .$PCoA1[c(chull(.$PCoA1, .$PCoA2), chull(.$PCoA1, .$PCoA2)[1])],
-                PCoA2 = .$PCoA2[c(chull(.$PCoA1, .$PCoA2), chull(.$PCoA1, .$PCoA2)[1])])) %>%
-  data.frame()
-
-
-
-# Now the dataframes are all ready to be completely customisable in ggplot
-# plot betadispersion plot
-ggplot() +
-  geom_point(aes(PCoA1, PCoA2, col = group), betadisper_dat$centroids, size = 4) +
-  geom_point(aes(PCoA1, PCoA2, col = group), betadisper_dat$eigenvector) +
-  geom_path(aes(PCoA1, PCoA2, col = group, group = group), betadisper_dat$chull ) +
-  geom_segment(aes(x = PCoA1.x, y = PCoA2.x, yend = PCoA2.y, xend = PCoA1.y, group = row.names(betadisper_lines), col = group), betadisper_lines) +
-  theme_bw(base_size = 12, base_family = 'Helvetica') 
-
-
-
-
-# plot distances from centroid
-ggplot(betadisper_dat$distances, aes(group, distances, fill = group, col = group)) +
-  geom_boxplot(aes(fill = group, col = group), outlier.shape = NA, width = 0.5, position = position_dodge(width = 0.55)) +
-  stat_summary(position = position_dodge(width = 0.55), geom = 'crossbar', fatten = 0, color = 'white', width = 0.4, fun.data = function(x){ return(c(y=median(x), ymin=median(x), ymax=median(x)))}) +
-  geom_point(aes(group, distances, col = group), shape = 21, fill ='white', position = position_jitterdodge(dodge.width = 0.55, jitter.width = 0.2)) +
-  theme_bw(base_size = 12, base_family = 'Helvetica') +
-  scale_color_manual('', values = c('black', 'grey'), labels = c("Grazed", 'Ungrazed')) +
-  scale_fill_manual('', values = c('black', 'grey'), labels = c("Grazed", 'Ungrazed')) +
-  ylab('Distance to centroid') +
-  theme(legend.position = 'none') +
-  xlab('') +
-  scale_x_discrete(labels = c('Grazed', 'Ungrazed'))
-
-
-
-
-
-
-
-####################################
-#betadisper mod
-
-
-
-betadisper_mod <-
-  function(d, group, type = c("median","centroid"), bias.adjust=FALSE,
-           sqrt.dist = FALSE, add = FALSE)
+#create function to calculate distance between samples and centroid
+betadistances <-
+  function(x)
   {
-    ## inline function for double centring. We used .C("dblcen", ...,
-    ## PACKAGE = "stats") which does not dublicate its argument, but
-    ## it was removed from R in r60360 | ripley | 2012-08-22 07:59:00
-    ## UTC (Wed, 22 Aug 2012) "more conversion to .Call, clean up".
-    dblcen <- function(x, na.rm = TRUE) {
-      cnt <- colMeans(x, na.rm = na.rm)
-      x <- sweep(x, 2L, cnt, check.margin = FALSE)
-      cnt <- rowMeans(x, na.rm = na.rm)
-      sweep(x, 1L, cnt, check.margin = FALSE)
-    }
-    ## inline function for spatial medians
-    spatialMed <- function(vectors, group, pos) {
-      axes <- seq_len(NCOL(vectors))
-      spMedPos <- ordimedian(vectors, group, choices = axes[pos])
-      spMedNeg <- ordimedian(vectors, group, choices = axes[!pos])
-      cbind(spMedPos, spMedNeg)
-    }
-    ## inline function for centroids
-    centroidFUN <- function(vec, group) {
-      cent <- apply(vec, 2,
-                    function(x, group) tapply(x, INDEX = group, FUN = mean),
-                    group = group)
-      if(!is.matrix(cent)) { ## if only 1 group, cent is vector
-        cent <- matrix(cent, nrow = 1,
-                       dimnames = list(as.character(levels(group)),
-                                       paste0("Dim", seq_len(NCOL(vec)))))
-      }
-      cent
-    }
-    ## inline function for distance computation
-    Resids <- function(x, c) {
-      if(is.matrix(c))
-        d <- x - c
-      else
-        d <- sweep(x, 2, c)
-      rowSums(d^2)
-    }
-    ## Tolerance for zero Eigenvalues
-    TOL <- sqrt(.Machine$double.eps)
-    ## uses code from stats:::cmdscale by R Core Development Team
-    if(!inherits(d, "dist"))
-      stop("distances 'd' must be a 'dist' object")
-    ## Someone really tried to analyse correlation like object in range -1..+1
-    if (any(d < -TOL, na.rm = TRUE))
-      stop("dissimilarities 'd' must be non-negative")
-    ## adjust to avoid negative eigenvalues (if they disturb you)
-    if (sqrt.dist)
-      d <- sqrt(d)
-    if (is.logical(add) && isTRUE(add))
-      add <- "lingoes"
-    if (is.character(add)) {
-      add <- match.arg(add, c("lingoes", "cailliez"))
-      if (add == "lingoes") {
-        ac <- addLingoes(as.matrix(d))
-        d <- sqrt(d^2 + 2 * ac)
-      }
-      else if (add == "cailliez") {
-        ac <- addCailliez(as.matrix(d))
-        d <- d + ac
-      }
-    }
-    if(missing(type))
-      type <- "median"
-    type <- match.arg(type)
-    ## checks for groups - need to be a factor for later
-    group <- if(!is.factor(group)) {
-      as.factor(group)
-    } else { ## if already a factor, drop empty levels
-      droplevels(group, exclude = NA) # need exclude = NA under Rdevel r71113
-    }
-    n <- attr(d, "Size")
-    x <- matrix(0, ncol = n, nrow = n)
-    x[row(x) > col(x)] <- d^2
-    ## site labels
-    labs <- attr(d, "Labels")
-    ## remove NAs in group
-    if(any(gr.na <- is.na(group))) {
-      group <- group[!gr.na]
-      x <- x[!gr.na, !gr.na]
-      ## update n otherwise C call crashes
-      n <- n - sum(gr.na)
-      ## update labels
-      labs <- labs[!gr.na]
-      message("missing observations due to 'group' removed")
-    }
-    ## remove NA's in d
-    if(any(x.na <- apply(x, 1, function(x) any(is.na(x))))) {
-      x <- x[!x.na, !x.na]
-      group <- group[!x.na]
-      ## update n otherwise C call crashes
-      n <- n - sum(x.na)
-      ## update labels
-      labs <- labs[!x.na]
-      message("missing observations due to 'd' removed")
-    }
-    x <- x + t(x)
-    x <- dblcen(x)
-    e <- eigen(-x/2, symmetric = TRUE)
-    vectors <- e$vectors
-    eig <- e$values
-    ## Remove zero eigenvalues
-    eig <- eig[(want <- abs(eig) > max(TOL, TOL * eig[1L]))]
-    ## scale Eigenvectors
-    vectors <- vectors[, want, drop = FALSE] %*% diag(sqrt(abs(eig)),
-                                                      nrow = length(eig))
-    ## store which are the positive eigenvalues
-    pos <- eig > 0
-    ## group centroids in PCoA space
-    centroids <-
-      switch(type,
-             centroid = centroidFUN(vectors, group),
-             median = spatialMed(vectors, group, pos)
-      )
-    ## for each of the groups, calculate distance to centroid for
-    ## observation in the group
-    ## Uses in-line Resids function as we want LAD residuals for
-    ## median method, and LSQ residuals for centroid method
-    dist.pos <- Resids(vectors[, pos, drop=FALSE],
-                       centroids[group, pos, drop=FALSE])
-    dist.neg <- 0
-    if(any(!pos))
-      dist.neg <- Resids(vectors[, !pos, drop=FALSE],
-                         centroids[group, !pos, drop=FALSE])
-    
-    
-    # Calculate distances to centroids of all groups
-    dist_to_other_centroids <- matrix(0, ncol = n, nrow = n)
-    for (i in 1:length(levels(group))) {
-      if (type == "centroid" && i == 1) {
-        # If calculating centroids, only need to do it once
-        dist_to_other_centroids <- Resids(vectors, centroids[group == levels(group)[i],, drop = FALSE])
-      } else {
-        # Calculate distances to centroids of other groups
-        other_group_indices <- group != levels(group)[i]
-        dist_to_other_centroids[other_group_indices] <- Resids(vectors[other_group_indices, , drop = FALSE], centroids[group == levels(group)[i],, drop = FALSE])
-      }
-    }
-    
-    # zij are the distances of each point to the other group centroids
-    zij <- sqrt(dist_to_other_centroids)
-    
-    if (bias.adjust) {
-      n.group <- as.vector(table(group))
-      zij <- zij * sqrt(n.group[group] / (n.group[group] - 1))
-    }
-    
-    
-    ## zij are the distances of each point to its group centroid
-    if (any(dist.neg > dist.pos)) {
-      ## Negative squared distances give complex valued distances:
-      ## take only the real part (which is zero). Github issue #306.
-      warning("some squared distances are negative and changed to zero")
-      zij <- Re(sqrt(as.complex(dist.pos - dist.neg)))
-    } else {
-      zij <- sqrt(dist.pos - dist.neg)
-    }
-    if (bias.adjust) {
-      n.group <- as.vector(table(group))
-      zij <- zij*sqrt(n.group[group]/(n.group[group]-1))
-    }
-    ## pre-compute group mean distance to centroid/median for `print` method
-    grp.zij <- tapply(zij, group, "mean")
-    ## add in correct labels
-    if (any(want))
-      colnames(vectors) <- names(eig) <-
-      paste("PCoA", seq_along(eig), sep = "")
-    if(is.matrix(centroids))
-      colnames(centroids) <- names(eig)
-    else
-      names(centroids) <- names(eig)
-    rownames(vectors) <- names(zij) <- labs
-    retval <- list(eig = eig, vectors = vectors, distances = zij,
-                   group = group, centroids = centroids,
-                   group.distances = grp.zij, call = match.call())
-    class(retval) <- "betadisper"
-    attr(retval, "method") <- attr(d, "method")
-    attr(retval, "type") <- type
-    attr(retval, "bias.adjust") <- bias.adjust
-    
-    # Return the modified results
-    retval$distances_other_centroids <- zij
-    
-    retval
+    cnt <- x$centroids
+    coord <- x$vectors
+    pos <- which(x$eig >= 0)
+    neg <- which(x$eig < 0)
+    d <- apply(cnt[,pos], 1,
+               function(z) rowSums(sweep(coord[,pos], 2, z)^2))
+    if (length(neg))
+      d <- d - apply(cnt[, neg], 1,
+                     function(z) rowSums(sweep(coord[,neg], 2, z)^2))
+    d <- as.data.frame(sqrt(d))
+    cbind("group" = x$group, d)
   }
 
+cen_distance <- betadistances(disper_mat) %>%
+                  tibble::rownames_to_column(var = "sample_name") %>%
+                  #reshape
+                  mutate(centroid = word(sample_name, -1),
+                         year = word(sample_name, 1),
+                         site = word(sample_name, 2)) %>%
+                  janitor::clean_names() %>%
+                  dplyr::select(-group) %>%
+                  dplyr::select(sample_name, centroid, year, site,everything()) %>%
+                  #make longer
+                  pivot_longer(cols = 5:52, names_to = "centroid_2", values_to = "distance") %>%
+                   mutate(centroid_period = str_extract(centroid_2, "([^_]+)$"),
+                          centroid_2 = str_remove(centroid_2, "_after"),
+                          centroid_2 = str_remove(centroid_2, "_before"),
+                          centroid_2 = toupper(centroid_2)) %>%
+                  #filter distances to 'before' centroid
+                  filter(centroid_period == "before") %>%
+                  #make sure we compare within sites only by matching site and centroid
+                  filter(site == centroid_2) %>%
+                  #clean up
+                  dplyr::select(year, site, distance) %>%
+                  mutate(year = as.factor(year),
+                         site = as.factor(site)) %>%
+                  data.frame()
 
+#check that it worked. 
 
+nrow(cen_distance) == nrow(stan_group_vars2)
+
+###the resulting output of cen_distance is the distance to the 'before' centroid
+#for a given site over time. Centroids correspond to the site-level centroid
+#of years 2007-2012. 
 
 ################################################################################
 #Step 4 - plot
 
 
-my_theme <-  theme(axis.text=element_text(size=6, color = "black"),
+my_theme <-  theme(axis.text=element_text(size=10, color = "black"),
                    axis.text.y = element_text(angle = 90, hjust = 0.5, color = "black"),
-                   axis.title=element_text(size=8, color = "black"),
+                   axis.title=element_text(size=10, color = "black"),
                    plot.tag=element_text(size=8, color = "black"),
-                   plot.title =element_text(size=7, face="bold", color = "black"),
+                   plot.title =element_text(size=8, face="bold", color = "black"),
                    # Gridlines 
                    panel.grid.major = element_blank(), 
                    panel.grid.minor = element_blank(),
@@ -613,8 +270,8 @@ my_theme <-  theme(axis.text=element_text(size=6, color = "black"),
                    legend.key = element_blank(),
                    legend.background = element_rect(fill=alpha('blue', 0)),
                    legend.key.height = unit(1, "lines"), 
-                   legend.text = element_text(size = 6, color = "black"),
-                   legend.title = element_text(size = 7, color = "black"),
+                   legend.text = element_text(size = 7, color = "black"),
+                   legend.title = element_text(size = 8, color = "black"),
                    #legend.spacing.y = unit(0.75, "cm"),
                    #facets
                    strip.background = element_blank(),
@@ -641,7 +298,8 @@ stan_trajectory <- ggplot(data = cent %>% mutate(basin = ifelse(year < 2012, "be
                             size=2) +
   ggtitle("Kelp forest community structure") +
   labs(color = 'K-means \ncluster', fill = "K-means \ncluster", tag = "A")+
-  theme_bw() + my_theme
+  theme_bw() + my_theme + theme(#plot.margin = margin(t=2,1,1,1, "lines"),
+    legend.position = c(0.9, 0.2)) #+ theme(plot.margin = margin(40,0,40,0))
 
 #stan_trajectory
 
@@ -670,7 +328,11 @@ shannon <- ggplot() +
   ylab("Shannon diversity") +
   xlab("Year") +
   ggtitle("Shannon diversity") +
-  guides(color = guide_legend(keyheight = unit(1.1, "lines")), fill = guide_legend(keyheight = unit(1.1, "lines")))
+  guides(color = guide_legend(keyheight = unit(1.1, "lines")), fill = guide_legend(keyheight = unit(1.1, "lines")))+
+  labs(tag = "C") + theme(#axis.text.x = element_blank(), 
+                          axis.title.x = element_blank(),
+                          #plot.margin = margin(5, 0, 20, 3)
+                          )
 
 
 #shannon
@@ -727,10 +389,14 @@ richness <- ggplot()+
   annotate(geom="rect", xmin=2014, xmax=2016, ymin=-Inf, ymax=Inf, fill="indianred1", alpha=0.2) +
   theme_bw() + my_theme +
   labs(color = "Taxa", fill = "Taxa")+
-  ylab("Species richness (n)")+
+  ylab("Taxonomic richness (n)")+
   xlab("Year")+
-  ggtitle("Species richness")+
-  guides(color = guide_legend(keyheight = unit(1.1, "lines")), fill = guide_legend(keyheight = unit(1.1, "lines")))
+  ggtitle("Taxonomic richness")+
+  guides(color = guide_legend(keyheight = unit(1.1, "lines")), fill = guide_legend(keyheight = unit(1.1, "lines")))+
+  labs(tag = "D") + theme(#axis.text.x = element_blank(), 
+                          axis.title.x = element_blank(),
+                          #plot.margin = margin(5, 0, 20, 3)
+                          ) 
 
 #richness
 
@@ -760,31 +426,68 @@ evenness <- ggplot()+
   annotate(geom="rect", xmin=2014, xmax=2016, ymin=-Inf, ymax=Inf, fill="indianred1", alpha=0.2) +
   theme_bw() + my_theme +
   labs(color = "Taxa", fill = "Taxa")+
-  ylab("Species evenness (n)")+
+  ylab("Taxonomic evenness (n)")+
   xlab("Year")+
-  ggtitle("Species evenness")+
-  guides(color = guide_legend(keyheight = unit(1.1, "lines")), fill = guide_legend(keyheight = unit(1.1, "lines")))
+  ggtitle("Taxonomic evenness")+
+  scale_y_continuous(labels = scales::number_format(accuracy = 0.1)) +
+  guides(color = guide_legend(keyheight = unit(1.1, "lines")), fill = guide_legend(keyheight = unit(0.5, "lines")))+
+  labs(tag = "E") #+ theme(plot.margin = margin(-2, 0, 9, 3))
 
 #evenness
 
 # Combine ggplots with ggarrange()
-combined_plot <- ggpubr::ggarrange(shannon, simpson, richness, evenness, ncol = 2, nrow=2, common.legend = TRUE, legend = "right") 
+combined_plot <- ggpubr::ggarrange(shannon, richness, evenness, ncol = 1, nrow=3, common.legend = TRUE, legend = "right") 
 
 # Display the plot
-combined_plot <- combined_plot + theme(plot.margin = margin(5, 0, 5, 20, "pt")) + 
-  labs(tag = "B") + theme(plot.tag=element_text(size=8, color = "black", face = "plain")) 
+#combined_plot <- combined_plot + theme(plot.margin = margin(5, 0, 5, 20, "pt")) + 
+ # labs(tag = "B") + theme(plot.tag=element_text(size=8, color = "black", face = "plain")) 
 
 #ggsave(combined_plot, filename=file.path(figdir, "Fig3_richness_diversity_evenness.png"), bg = "white",
  #      width=5.5, height=4.5, units="in", dpi=600) 
 
 
-region_wide_plot <- ggpubr::ggarrange(stan_trajectory, combined_plot, ncol=1)
-region_wide_plot 
-
-ggsave(region_wide_plot, filename=file.path(figdir, "Fig3_regional_metrics_new6.png"), bg = "white",
-      width=5.5, height=8, units="in", dpi=600) 
+region_wide_plot <- ggpubr::ggarrange(stan_trajectory, combined_plot, ncol=2, widths = c(0.6,0.4)) 
 
 
+#ggsave(region_wide_plot, filename=file.path(figdir, "Fig3_regional_metrics_new6.png"), bg = "white",
+ #     width=5.5, height=8, units="in", dpi=600) 
+
+
+
+cen_plot <- ggplot(cen_distance, aes(x = as.numeric(as.character(year)), y = distance, group = site)) +
+  geom_line(aes(color = "Sites (n=24)"), alpha = 0.7) +
+  geom_smooth(aes(color = "Median", group = 1), method = "loess", span = 0.4, alpha = 0.8) +
+  labs(x = "Year", y = "Distance (Euclidean) to 2007-2012 centroid", tag = "B",
+       title = "Temporal stability",
+       color = "") +  # Set the legend title here
+  scale_color_manual(values = c("Median" = "black","Sites (n=24)" = "lightblue")) +
+  guides(color = guide_legend()) +  # Remove guide_legend(title = "Trajectory")
+  annotate(geom = "rect", xmin = 2014, xmax = 2016, ymin = -Inf, ymax = Inf, fill = "indianred1", alpha = 0.2) +
+  annotate(geom = "text", label = "MHW", x = 2017.5, y = 0.6, size = 3) +
+  annotate("segment", x = 2016.5, y = 0.6, xend = 2015, yend = 0.6, arrow = arrow(type = "closed", length = unit(0.02, "npc"))) +
+  geom_vline(xintercept = 2013, linetype = "dotted", size = 0.3) +
+  annotate(geom = "text", label = "SSW", x = 2011, y = 0.6, size = 3) +
+  annotate("segment", x = 2011.2, y = 0.585, xend = 2012.8, yend = 0.5, arrow = arrow(type = "closed", length = unit(0.02, "npc"))) +
+  theme_bw() + my_theme +
+  guides(color = guide_legend(override.aes = list(fill = NA)),
+         linetype = guide_legend(override.aes = list(fill = NA))) +
+  theme(legend.key = element_rect(fill = NA, color = "white"),
+        legend.position = c(0.86, 0.16))  
+
+
+
+
+##arrange and export
+
+left <- ggpubr::ggarrange(stan_trajectory, cen_plot, ncol=1, heights = c(0.5,0.5)) 
+left
+
+
+final_plot <- ggpubr::ggarrange(left, combined_plot, ncol=2)
+
+
+#ggsave(final_plot, filename=file.path(figdir, "Fig3_regional_metrics_new8.png"), bg = "white",
+ #  width=8, height=7.5, units="in", dpi=600) 
 
 
 
