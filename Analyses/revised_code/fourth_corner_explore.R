@@ -8,16 +8,16 @@ librarian::shelf(tidyverse, here, ggplot2, mvabund)
 
 ################################################################################
 #set directories and load data
-basedir <- "/Volumes/seaotterdb$/kelp_recovery"
-figdir <- here::here("analyses","4patch_drivers","Figures")
-tabdir <- here::here("analyses","4patch_drivers","Tables")
+basedir <- here::here("output")
+figdir <- here::here("figures")
+tabdir <- here::here("tables")
 
 #load raw dat
-swath_raw <- read.csv(file.path(basedir, "data/subtidal_monitoring/processed/kelp_swath_counts_CC.csv"))
+swath_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_swath_counts_CC.csv"))
 
-upc_raw <- read.csv(file.path(basedir, "data/subtidal_monitoring/processed/kelp_upc_cov_CC.csv")) 
+upc_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_upc_cov_CC.csv")) 
 
-fish_raw <- read.csv(file.path(basedir, "data/subtidal_monitoring/processed/kelp_fish_counts_CC.csv"))
+fish_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_fish_counts_CC.csv"))
 
 #load species attribute table
 spp_attribute <- read.csv(file.path(tabdir,"TableS1_spp_table.csv")) %>% janitor::clean_names() %>%
@@ -128,11 +128,40 @@ coef_swath <- swath_mod$fourth %>%
 
 
 
-
-
-
-
-
-
-
 dput(swath_L)
+
+
+
+
+
+
+
+
+# Calculate the total density for each site at each year
+site_year_total_density <- swath_long %>%
+  mutate(transition_site = ifelse(site == "HOPKINS_UC" | site == "CANNERY_UC" |
+                                    site == "SIREN" | site == "CANNERY_DC","no","yes"))%>%
+  group_by(year, site, trophic_ecology, transition_site) %>%
+  summarize(total_density = sum(density, na.rm=TRUE))
+
+# Calculate the mean total density for each MHW level
+mean_total_density <- site_year_total_density %>%
+  group_by(year, trophic_ecology, transition_site) %>%
+  summarize(mean_density = mean(total_density, na.rm=TRUE))
+
+# Calculate the proportion using the mean total density
+proportion_data <- mean_total_density %>%
+  group_by(year, transition_site) %>%
+  mutate(proportion = mean_density / sum(mean_density))
+
+# Create the bar plot
+ggplot(proportion_data, aes(x = year, y = proportion, fill = trophic_ecology)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Total Proportion of Trophic Ecology Levels by MHW",
+       x = "MHW",
+       y = "Proportion") +
+  facet_wrap(~transition_site)+
+  scale_fill_mba(exhibit = "mba2", n_colors = 6, type = "discrete") + # You can choose a different color palette
+  theme_minimal()
+
+
