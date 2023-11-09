@@ -8,10 +8,10 @@ librarian::shelf(tidyverse, here, vegan)
 
 ################################################################################
 #set directories and load data
-basedir <- "/Volumes/seaotterdb$/kelp_recovery/"
-figdir <- here::here("analyses","4patch_drivers","Figures")
+basedir <- here::here("output")
+figdir <- here::here("figures")
 
-swath_raw <- read.csv(file.path(basedir, "data/subtidal_monitoring/processed/kelp_swath_counts_CC.csv")) 
+swath_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_swath_counts_CC.csv")) 
 
 ################################################################################
 #select and reshape data

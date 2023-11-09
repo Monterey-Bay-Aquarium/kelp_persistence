@@ -8,21 +8,21 @@ librarian::shelf(tidyverse, here, vegan, ggplot2, cluster, ggforce, reshape2)
 
 ################################################################################
 #set directories and load data
-figdir <- here::here("analyses","4patch_drivers","Figures")
-basedir <- here::here("analyses","4patch_drivers","Output")
+figdir <- here::here("figures")
+basedir <- here::here("output")
 
 #load multivariate data
-load(file.path(basedir, "multivariate_data.Rdata"))
+load(file.path(basedir, "monitoring_data/processed/multivariate_data.Rdata"))
 
 #load standardized data
-stan_dat <- read.csv(file.path(basedir, "kelp_stan_CC.csv")) 
+stan_dat <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_stan_CC.csv")) 
 
 #load raw dat
-fish_raw <- read.csv(file.path(basedir, "kelp_fish_counts_CC.csv")) 
+fish_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_fish_counts_CC.csv")) 
 
-upc_raw <- read.csv(file.path(basedir, "kelp_upc_cov_CC.csv")) 
+upc_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_upc_cov_CC.csv")) 
 
-swath_raw <- read.csv(file.path(basedir, "kelp_swath_counts_CC.csv")) %>%
+swath_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_swath_counts_CC.csv")) %>%
   #remove kelps -- we will handle them as their own group
   dplyr::select(-macrocystis_pyrifera,
                 -pterygophora_californica,
@@ -35,7 +35,7 @@ swath_raw <- read.csv(file.path(basedir, "kelp_swath_counts_CC.csv")) %>%
                 -laminaria_farlowii,
                 -pleurophycus_gardneri)
 
-kelp_raw <- read.csv(file.path(basedir, "kelp_swath_counts_CC.csv")) %>% 
+kelp_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_swath_counts_CC.csv")) %>% 
   #extract kelps as their own group              
           dplyr::select(1:11, macrocystis_pyrifera,
                               pterygophora_californica,
@@ -184,85 +184,9 @@ kelp_alphadiv <- cbind(kelp_groups, kelp_richness, kelp_shannon, kelp_simpson, k
   mutate(MHW = str_to_sentence(MHW),
          MHW = factor(MHW, levels=c("Before","During","After")))
 
-################################################################################
-#Step 4 determine spp that explain changes over time
-
-fish_join <- cbind(fish_alphadiv, fish_dat) %>% rename(richness=S.obs) %>%
-              #calculate annual mean
-              group_by(year)%>%
-              summarize(across(3:112,mean))
-
-fish_rich <- fish_join %>%
-  select(year, 7:111) %>%
-  mutate(across(2:106, ~ifelse(. > 0, 1, 0))) 
-
-# Create a data frame for species changes (added or lost)
-species_changes <- data.frame(year = numeric(0), species_added = character(0), species_lost = character(0))
-
-# Sort the data frame by year
-fish_rich <- fish_rich %>%
-  arrange(year)
-
-# Iterate through years starting from the second year (2008)
-for (i in 2:nrow(fish_rich)) {
-  current_year <- fish_rich$year[i]
-  previous_year <- fish_rich$year[i - 1]
-  
-  current_species <- fish_rich[i, 3:106]  # Exclude the year column from comparison
-  previous_species <- fish_rich[i - 1, 3:106]
-  
-  species_added <- colnames(current_species)[current_species > previous_species]
-  species_lost <- colnames(previous_species)[previous_species > current_species]
-  
-  species_changes <- rbind(species_changes, data.frame(year = current_year, species_added = paste(species_added, collapse = ", "), species_lost = paste(species_lost, collapse = ", ")))
-}
-
-# Print or work with species_changes to see which species were added or lost each year relative to the previous year
-print(species_changes)
-
-
-# Reshape the data to long format
-fish_rich_long <- fish_rich %>%
-  pivot_longer(cols = -year, names_to = "species", values_to = "presence")
-
-# Filter out species that were never observed (presence == 0) in any year
-fish_rich_filtered <- fish_rich_long %>%
-  group_by(species) %>%
-  filter(any(presence == 1))
-
-# Calculate richness (number of species observed) for each year based on the filtered dataset
-richness_data <- fish_rich_filtered %>%
-  group_by(year) %>%
-  summarize(richness = sum(presence))
-
-# Filter out species that were observed in ALL years
-fish_rich_reduced <- fish_rich_filtered %>%
-  group_by(species) %>%
-  filter(sum(presence) != n_distinct(year))
-
-# Create a heatmap
-g <- ggplot(data = fish_rich_reduced, aes(x = year, y = species, fill = factor(presence))) +
-  geom_tile() +
-  scale_fill_manual(values = c("0" = "white", "1" = "green"), labels = c("0" = "Absent", "1" = "Present")) +
-  labs(title = "Species Presence/Absence Over Years", x = "Year", y = "Species") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-
-
-# Create a colored line plot with a gradient color transition between years
-ggplot(data = richness_data, aes(x = year, y = 0, color = richness)) +
-  geom_line(size = 20, aes(group = 1)) +
-  labs(title = "Richness Over Years", x = "Year", y = NULL) +
-  scale_color_gradientn(
-    colors = c("navyblue", "indianred"),
-    values = scales::rescale(c(min(richness_data$year), max(richness_data$year))),
-    guide = "none"
-  ) +  # Adjust the gradient colors and values as needed
-  theme_minimal()
 
 ################################################################################
-#Step 5 - examine site cohesion and distance changes over time
+#Step 4 - examine site cohesion and distance changes over time
 
 
 stan_group_vars2 <- stan_group_vars %>% mutate(period = ifelse(year < 2013,"Before","After"),
@@ -275,9 +199,8 @@ stan_max_distmat2 <- usedist::dist_setNames(stan_max_distmat, stan_group_vars2$y
 
 #use betadisper to reduce vegdist to principal coords
 disper_mat <- betadisper(stan_max_distmat2, type="centroid",
-                         group = stan_group_vars2$year)
+                         group = stan_group_vars2$site_period)
 
-boxplot(disper_mat)
 
 #create function to calculate distance between samples and centroid
 betadistances <-
@@ -562,62 +485,9 @@ left
 
 final_plot <- ggpubr::ggarrange(left, combined_plot, ncol=2)
 
-ggsave(final_plot, filename=file.path(figdir, "Fig3_regional_metrics_new8.png"), bg = "white",
-   width=8, height=7.5, units="in", dpi=600) 
 
-
-
-
-
-
-
-
-
-
-
-########work on plotting proportions
-
-
-
-
-
-# Calculate the total density for each site at each year
-site_year_total_density <- swath_long %>%
-  mutate(transition_site = ifelse(site == "HOPKINS_UC" | site == "CANNERY_UC" |
-                                    site == "SIREN" | site == "CANNERY_DC","no","yes"))%>%
-  group_by(year, site, trophic_ecology, transition_site) %>%
-  summarize(total_density = sum(density, na.rm=TRUE))
-
-# Calculate the mean total density for each MHW level
-mean_total_density <- site_year_total_density %>%
-  group_by(year, trophic_ecology, transition_site) %>%
-  summarize(mean_density = mean(total_density, na.rm=TRUE))
-
-# Calculate the proportion using the mean total density
-proportion_data <- mean_total_density %>%
-  group_by(year, transition_site) %>%
-  mutate(proportion = mean_density / sum(mean_density))
-
-# Create the bar plot
-ggplot(proportion_data, aes(x = year, y = proportion, fill = trophic_ecology)) +
-  geom_bar(stat = "identity") +
-  labs(title = "Total Proportion of Trophic Ecology Levels by MHW",
-       x = "MHW",
-       y = "Proportion") +
-  facet_wrap(~transition_site)+
-  scale_fill_brewer(palette = "Set3") + # You can choose a different color palette
-  theme_minimal()
-
-
-
-
-
-
-
-
-
-
-
+#ggsave(final_plot, filename=file.path(figdir, "Fig3_regional_metrics_new8.png"), bg = "white",
+ #  width=8, height=7.5, units="in", dpi=600) 
 
 
 
