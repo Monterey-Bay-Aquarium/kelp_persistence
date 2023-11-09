@@ -8,13 +8,12 @@ librarian::shelf(tidyverse, here, vegan, reshape2)
 
 ################################################################################
 #set directories and load data
-basedir <- "/Volumes/seaotterdb$/kelp_recovery/"
-figdir <- here::here("analyses","4patch_drivers","Figures")
-outdir <- here::here("analyses","4patch_drivers","Output")
+basedir <- here::here("output")
+figdir <- here::here("figures")
 
-load(file.path(outdir,"multivariate_data.Rdata"))
+load(file.path(basedir,"/monitoring_data/processed/multivariate_data.Rdata"))
 
-swath_raw <- read.csv(file.path(basedir, "data/subtidal_monitoring/processed/kelp_swath_counts_CC.csv")) 
+swath_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_swath_counts_CC.csv")) 
 
 ################################################################################
 #generate distance matrix
@@ -165,25 +164,10 @@ strong <- subset(plot_dat, species == "strongylocentrotus_purpuratus")%>%
          site = str_replace(site, "Uc", "UC"))
 
 
-# Create the dumbbell plot with arrows
-A <- ggplot(data = macro, aes(x = mean_count_after, y = mean_count_before)) +
-  geom_segment(aes(x = strong$mean_count_after, xend = strong$mean_count_after, y = macro$mean_count_before, yend = macro$mean_count_after, color = mean_sim), size = 1, arrow = arrow(length = unit(0.25, "cm"))) +
-  geom_point(aes(x = strong$mean_count_after, y = macro$mean_count_before, color = mean_sim), size = 3) +
-  xlab("Mean purple sea urchin density 2014-2020 (per 60 m²)") +
-  ylab("Kelp stipe density (per 60 m²)") +
-  labs(color = "Community similarity \n (2007-2013 vs. 2014-2020)")+
-  #scale_x_log10("Mean Count After (Strongylocentrotus Purpuratus)") +
-  scale_color_gradient(name = "Mean Sim") +
-  scale_color_viridis_c() +
-  theme_classic()+
-  #ggrepel::geom_label_repel(data = macro, aes(x = strong$mean_count_after, y = macro$mean_count_before, label = site),size=2, box.padding = 1, force = 50,min.segment.length = 1)+
-  my_theme
-A
-
 
 ##build schematic
 # build schematic
-B <- ggplot() +
+A <- ggplot() +
   geom_segment(data = data.frame(x = c(0), y = c(2.7), xend = c(25), yend = c(2), facet_var = "i. no community structure change"),
                aes(x = x, y = y, xend = xend, yend = yend), color = "#008080", arrow = arrow(length = unit(0.25, "cm"), ends = "last"), size = 1) +
   geom_segment(data = data.frame(x = c(0), y = c(2.7), xend = c(25), yend = c(0.2), facet_var = "ii. kelp loss"),
@@ -205,13 +189,13 @@ B <- ggplot() +
   my_theme + theme(aspect.ratio = 1.2,
                    plot.margin = margin(0, 50, 0, 0, "pt")) # decrease margin to align with C
 
-B
+A
 
 
 
 
 # Create the dumbbell plot with arrows and log scale for strongylocentrotus_purpuratus
-C <- ggplot(data = macro, aes(x = mean_count_after/60, y = mean_count_before/60)) +
+B <- ggplot(data = macro, aes(x = mean_count_after/60, y = mean_count_before/60)) +
   geom_segment(aes(x = strong$mean_count_before/60, xend = strong$mean_count_after/60, y = macro$mean_count_before/60, yend = macro$mean_count_after/60, color = mean_sim), size = 1, arrow = arrow(length = unit(0.25, "cm"))) +
   geom_point(aes(x = strong$mean_count_before/60, y = macro$mean_count_before/60, color = mean_sim), size = 3) +
   xlab("Purple sea urchin density (per m²)") +
@@ -223,24 +207,24 @@ C <- ggplot(data = macro, aes(x = mean_count_after/60, y = mean_count_before/60)
   labs(tag = "B")+
   #ggrepel::geom_label_repel(data = macro, aes(x = strong$mean_count_before/60, y = macro$mean_count_before/60, label = site), size = 2, box.padding = 1, force = 20, min.segment.length = 1) +
   my_theme
-C
+B
 
-C_no_legend <- C + theme(legend.position = "none")
+B_no_legend <- B + theme(legend.position = "none")
 
 # Get the legend from plot C
-legend_C <- cowplot::get_legend(C)
+legend_B <- cowplot::get_legend(B)
 
 
-D <- cowplot::plot_grid(B, C_no_legend, ncol = 1, nrow = 2, rel_heights = c(0.45,0.55), align = "hv",axis = 1) 
+C <- cowplot::plot_grid(A, B_no_legend, ncol = 1, nrow = 2, rel_heights = c(0.45,0.55), align = "hv",axis = 1) 
 
-E <- cowplot::plot_grid(D, legend_C, ncol = 2, nrow = 1, align = "hv",axis = 1, rel_widths = c(0.5,0.1)) 
-E
+D <- cowplot::plot_grid(C, legend_B, ncol = 2, nrow = 1, align = "hv",axis = 1, rel_widths = c(0.5,0.1)) 
+D
 
 
 
 # Save the combined plot
-ggsave(E, filename = file.path(figdir, "Fig3_dumbbell_new5.png"), 
-       width = 7, height = 8, bg = "white", units = "in", dpi = 600)
+#ggsave(D, filename = file.path(figdir, "Fig3_dumbbell_new5.png"), 
+ #      width = 7, height = 8, bg = "white", units = "in", dpi = 600)
 
 
 
