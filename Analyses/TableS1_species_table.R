@@ -13,53 +13,9 @@ figdir <- here::here("analyses","4patch_drivers","Figures")
 tabdir <- here::here("analyses","4patch_drivers","Tables")
 
 #load raw dat
-swath_raw <- read.csv(file.path(basedir, "data/subtidal_monitoring/processed/kelp_swath_counts_CC.csv")) %>%
-  #select sites in Carmel and Monterey Bay only
-  dplyr::filter(latitude >= 36.46575 & latitude <= 36.64045) %>%
-  #drop sites with insufficient data
-  dplyr::filter(!(site == "ASILOMAR_DC" |
-                    site == "ASILOMAR_UC" |
-                    site == "CHINA_ROCK" |
-                    site == "CYPRESS_PT_DC" |
-                    site == "CYPRESS_PT_UC" |
-                    site == "PINNACLES_IN" |
-                    site == "PINNACLES_OUT" |
-                    site == "PT_JOE" |
-                    site == "SPANISH_BAY_DC" |
-                    site == "SPANISH_BAY_UC" |
-                    site == "BIRD_ROCK")) 
-
-upc_raw <- read.csv(file.path(basedir, "data/subtidal_monitoring/processed/kelp_upc_cov_CC.csv")) %>%
-  #select sites in Carmel and Monterey Bay only
-  dplyr::filter(latitude >= 36.46575 & latitude <= 36.64045) %>%
-  #drop sites with insufficient data
-  dplyr::filter(!(site == "ASILOMAR_DC" |
-                    site == "ASILOMAR_UC" |
-                    site == "CHINA_ROCK" |
-                    site == "CYPRESS_PT_DC" |
-                    site == "CYPRESS_PT_UC" |
-                    site == "PINNACLES_IN" |
-                    site == "PINNACLES_OUT" |
-                    site == "PT_JOE" |
-                    site == "SPANISH_BAY_DC" |
-                    site == "SPANISH_BAY_UC" |
-                    site == "BIRD_ROCK"))
-
-fish_raw <- read.csv(file.path(basedir, "data/subtidal_monitoring/processed/kelp_fish_counts_CC.csv")) %>%
-  #select sites in Carmel and Monterey Bay only
-  dplyr::filter(latitude >= 36.46575 & latitude <= 36.64045) %>%
-  #drop sites with insufficient data
-  dplyr::filter(!(site == "ASILOMAR_DC" |
-                    site == "ASILOMAR_UC" |
-                    site == "CHINA_ROCK" |
-                    site == "CYPRESS_PT_DC" |
-                    site == "CYPRESS_PT_UC" |
-                    site == "PINNACLES_IN" |
-                    site == "PINNACLES_OUT" |
-                    site == "PT_JOE" |
-                    site == "SPANISH_BAY_DC" |
-                    site == "SPANISH_BAY_UC" |
-                    site == "BIRD_ROCK"))
+swath_raw <- read.csv(file.path(basedir, "data/subtidal_monitoring/processed/kelp_swath_counts_CC.csv")) 
+upc_raw <- read.csv(file.path(basedir, "data/subtidal_monitoring/processed/kelp_upc_cov_CC.csv"))
+fish_raw <- read.csv(file.path(basedir, "data/subtidal_monitoring/processed/kelp_fish_counts_CC.csv")) 
 
 #load species attribute table
 spp_attribute <- readxl::read_excel(file.path(basedir,"data/subtidal_monitoring/raw/spp_attribute_table.xlsx"), sheet = 2)
@@ -184,7 +140,20 @@ spp_table_full <- left_join(combined_spp, spp_tab_corrected, by="species") %>%
                            primary_trophic = str_to_sentence(primary_trophic))
 
 
-write.csv(spp_table_full, file.path(tabdir, "TableS1_spp_table.csv"), row.names = FALSE)
+
+################################################################################
+#tidy 
+
+unique(spp_table_full$species)
+spp_table_full1 <- spp_table_full %>%
+                    rename(taxa = species)%>%
+                    mutate(taxa = case_when(
+                      taxa == "Cancridae" ~ "Cancridae family",
+                      TRUE ~ taxa
+                    ))
+
+
+write.csv(spp_table_full1, file.path(tabdir, "TableS1_spp_table.csv"), row.names = FALSE)
 
 
 

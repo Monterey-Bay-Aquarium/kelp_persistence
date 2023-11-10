@@ -206,7 +206,7 @@ coef_swath <- swath_mod$fourth %>%
          "Before" = MHWbefore,
          "During" = MHWduring)%>%
   mutate(`Trophic ecology` = recode(`Trophic ecology`,
-                                     "trophic_ecologyAutotroph" = "Autotroph",
+                                     "trophic_ecologyAutotroph" = "Macroalgae",
                                      "trophic_ecologyDetritivore (algal)" = "Detritivore (algal)",
                                     "trophic_ecologyHerbivore" = "Herbivore",
                                     "trophic_ecologyMacroinvertivore" = "Macroinvertivore",
@@ -244,39 +244,81 @@ coef_upc <- upc_mod$fourth %>%
 fourth_dat <- rbind(coef_swath, coef_fish, coef_upc) %>%
               pivot_longer(2:4, names_to = "Heatwave period",values_to = "Coef") %>%
               #center and scale
-              mutate(beta_sd=scale(Coef, center=F, scale=T),
-                     `Heatwave period` = factor(`Heatwave period`,levels = c("Before","During","After"))) 
+              mutate(beta_sd=scale(Coef, center=T, scale=T),
+                     `Heatwave period` = factor(`Heatwave period`,levels = c("Before","During","After"))) %>%
+              #drop UPC since these taxa are already reflected in swath
+              filter(!(method == "upc")) %>%
+              mutate(method = case_when(
+                method == "fish" ~ "Fishes",
+                method == "swath" ~ "Invertebrates and \nmacroalgae"
+              ),
+                `Trophic ecology` = factor(`Trophic ecology`, levels = c(
+                  "Detritivore (algal)", "Macroalgae", "Planktivore","Herbivore",
+                  "Microinvertivore","Macroinvertivore","Piscivore"
+                )))
+              
 
 
 ################################################################################
 #plot
 
 
+# Theme
+my_theme <-  theme(axis.text=element_text(size=8, color = "black"),
+                   axis.text.y = element_text(color ="black"),
+                   axis.title=element_text(size=10, color = "black"),
+                   plot.tag= element_text(size=8, color = "black"),
+                   plot.title =element_text(size=10, face="italic", color = "black"),
+                   # Gridlines 
+                   panel.grid.major = element_blank(), 
+                   panel.grid.minor = element_blank(),
+                   panel.background = element_blank(), 
+                   axis.line = element_line(colour = "black"),
+                   # Legend
+                   legend.key = element_blank(),
+                   legend.background = element_rect(fill=alpha('blue', 0)),
+                   legend.key.height = unit(1, "lines"), 
+                   legend.text = element_text(size = 6, color = "black"),
+                   legend.title = element_text(size = 7, color = "black"),
+                   #legend.spacing.y = unit(0.75, "cm"),
+                   #facets
+                   strip.background = element_blank(),
+                   strip.text = element_text(size = 8 ,face="bold", color = "black", hjust =0),
+)
+
+
 # Plot all four corner results
-ggplot(fourth_dat, aes(x = `Heatwave period`, y = `Trophic ecology`, fill = beta_sd)) +
+g <- ggplot(fourth_dat, aes(x = `Heatwave period`, y = `Trophic ecology`, fill = beta_sd)) +
   facet_col(~ method, scales = "free_y", space = "free",
             strip.position = "top") +
   geom_tile() +
-  # Plot 0s (no interaction term)
   geom_point(data=fourth_dat %>% filter(Coef==0), shape="x") +
   # Labels
-  labs(x="Indicator", y="Thermal affinity", tag="") +
+  labs(x="Marine heatwave", y="", tag="") +
   scale_fill_mba("drifters2",n_colors=50, type = "continuous", name = "Effect") +
-  # Legend
-  #scale_fill_gradient2(name="Effect",
-   #                    midpoint=0,
-    #                   breaks=c(-1.5, 0, 2), 
-     #                  labels=c("-", "0", "+"),
-      #                 low="navy", high="darkred", mid="white") +
   guides(fill = guide_colorbar(ticks.colour = "black", frame.colour = "black")) +
   # Theme
   theme_bw() + 
-  theme(legend.position = "bottom",
-        legend.key.size = unit(0.2, "cm"),
-        legend.margin = margin(-5,0,0,0),
-        axis.title.y = element_text(vjust = 4), 
-        # axis.title = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust=1))
+  my_theme
+
+
+# export
+ggsave(g, filename = file.path(figdir, "Fig3_fourth_corner.png"), 
+      width = 3.2, height = 4.2, bg = "white", units = "in", dpi = 600)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

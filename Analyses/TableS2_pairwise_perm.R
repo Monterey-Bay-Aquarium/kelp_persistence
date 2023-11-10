@@ -23,21 +23,7 @@ tab_dir <- here::here("analyses","4patch_drivers","Tables")
 #pre-analysis processing
 
 #replace any NAs with 0
-stan_dat <- stan_dat %>% mutate(across(where(is.numeric), ~replace_na(., 0))) %>%
-  #select sites in Carmel and Monterey Bay only
-  dplyr::filter(latitude >= 36.46575 & latitude <= 36.64045) %>%
-  #drop sites with insufficient data
-  dplyr::filter(!(site == "ASILOMAR_DC" |
-                    site == "ASILOMAR_UC" |
-                    site == "CHINA_ROCK" |
-                    site == "CYPRESS_PT_DC" |
-                    site == "CYPRESS_PT_UC" |
-                    site == "PINNACLES_IN" |
-                    site == "PINNACLES_OUT" |
-                    site == "PT_JOE" |
-                    site == "SPANISH_BAY_DC" |
-                    site == "SPANISH_BAY_UC" |
-                    site == "BIRD_ROCK")) # %>%
+stan_dat <- stan_dat %>% mutate(across(where(is.numeric), ~replace_na(., 0)))  # %>%
   #test permova if urchins, kelp, and sea stars are removed
   #dplyr::select(!(c(strongylocentrotus_purpuratus, macrocystis_pyrifera,
    #                 pycnopodia_helianthoides, pisaster_brevispinus,

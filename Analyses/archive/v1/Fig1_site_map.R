@@ -9,14 +9,14 @@ librarian::shelf(tidyverse, here, tidyverse, tidync, sf, raster, terra, ggtext, 
 
 ################################################################################
 #set directories and load data
-basedir <- here::here("output")
-figdir <- here::here("analyses")
+basedir <- "/Volumes/seaotterdb$/kelp_recovery/"
+figdir <- here::here("analyses","4patch_drivers","Figures")
 
 #load standardized dat
-stan_dat <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_stan_CC.csv")) 
+stan_dat <- read.csv(file.path(basedir, "data/subtidal_monitoring/processed/kelp_stan_CC.csv")) 
 
 #read state
-ca_counties <- st_read(file.path(basedir, "gis_data/raw/ca_county_boundaries/s7vc7n.shp")) 
+ca_counties <- st_read(file.path(basedir, "data/gis_data/raw/ca_county_boundaries/s7vc7n.shp")) 
 
 # Get land
 usa <- rnaturalearth::ne_states(country="United States of America", returnclass = "sf")
@@ -120,7 +120,7 @@ monterey_label <- data.frame(
 
  # Plot the county boundaries and site locations with non-overlapping labels
 map <- ggplot() +
-  geom_sf(data = ca_counties) +
+  geom_sf(data = ca_counties_mpen) +
   geom_sf(data = site_locations_sf) +
   ggrepel::geom_label_repel(
     data = site_locations_labels,
