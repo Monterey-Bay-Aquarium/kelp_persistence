@@ -8,17 +8,17 @@ librarian::shelf(tidyverse, here, ggplot2, mvabund)
 
 ################################################################################
 #set directories and load data
-basedir <- "/Volumes/seaotterdb$/kelp_recovery"
-figdir <- here::here("analyses","4patch_drivers","Figures")
-tabdir <- here::here("analyses","4patch_drivers","Tables")
+basedir <- here::here("output")
+figdir <- here::here("figures")
+tabdir <- here::here("tables")
 
 #load raw dat
-swath_raw <- read.csv(file.path(basedir, "data/subtidal_monitoring/processed/kelp_swath_counts_CC.csv")) 
-upc_raw <- read.csv(file.path(basedir, "data/subtidal_monitoring/processed/kelp_upc_cov_CC.csv"))
-fish_raw <- read.csv(file.path(basedir, "data/subtidal_monitoring/processed/kelp_fish_counts_CC.csv")) 
+swath_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_swath_counts_CC.csv")) 
+upc_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_upc_cov_CC.csv"))
+fish_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_fish_counts_CC.csv")) 
 
 #load species attribute table
-spp_attribute <- readxl::read_excel(file.path(basedir,"data/subtidal_monitoring/raw/spp_attribute_table.xlsx"), sheet = 2)
+spp_attribute <- readxl::read_excel(file.path(basedir,"monitoring_data/raw/spp_attribute_table.xlsx"), sheet = 2)
 
 
 ################################################################################
@@ -150,7 +150,13 @@ spp_table_full1 <- spp_table_full %>%
                     mutate(taxa = case_when(
                       taxa == "Cancridae" ~ "Cancridae family",
                       TRUE ~ taxa
-                    ))
+                    ),
+                    #fix trophic ecology
+                    primary_trophic = case_when(
+                      taxa == "Mesocentrotus franciscanus" ~ "Herbivore",
+                      TRUE ~ primary_trophic
+                    )
+                    )
 
 
 write.csv(spp_table_full1, file.path(tabdir, "TableS1_spp_table.csv"), row.names = FALSE)
