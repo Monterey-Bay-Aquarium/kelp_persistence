@@ -20,7 +20,8 @@ upc_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_upc_cov_C
 fish_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_fish_counts_CC.csv"))
 
 #load species attribute table
-spp_attribute <- read.csv(file.path(tabdir,"TableS1_spp_table.csv")) %>% janitor::clean_names()
+spp_attribute <- read.csv(file.path(tabdir,"TableS1_spp_table.csv")) %>% janitor::clean_names() %>%
+                      mutate(taxa = ifelse(taxa == "Loxorhynchus crispatus  or scyra acutifrons","Loxorhynchus crispatus scyra acutifrons",taxa))
 
 ################################################################################
 #calculate transect means to reduce memory 
@@ -152,7 +153,7 @@ fish_mod_dat <- fish_build1 %>%
   dplyr::select(outbreak_period, everything()) %>%
   dplyr::group_by(year, outbreak_period, MHW, baseline_region, latitude, longitude, site,
                   affiliated_mpa, mpa_class, mpa_designation) %>%
-  dplyr::summarize(across(4:57, mean, na.rm = TRUE)) %>%
+  dplyr::summarize(across(4:55, mean, na.rm = TRUE)) %>%
   #define transition sites
   mutate(transition_site = ifelse(site == "HOPKINS_UC" | site == "CANNERY_UC" |
                                     site == "SIREN" | site == "CANNERY_DC","no","yes"))%>%
@@ -163,7 +164,7 @@ fish_persist <- fish_mod_dat %>% filter(transition_site == "no")
 
 #####run model for transition sites
 #create multivariate object
-fish_t_spp <- mvabund(fish_transition[, 12:65]) #exclude grouping vars
+fish_t_spp <- mvabund(fish_transition[, 12:63]) #exclude grouping vars
 #fit the model
 fish_t_model <- manyglm(fish_t_spp ~ fish_transition$outbreak_period)
 #test for significance
@@ -180,7 +181,7 @@ fish_t_sig <- fish_t_out %>%
 
 #####run model for persist sites
 #create multivariate object
-fish_p_spp <- mvabund(fish_persist[, 12:65]) #exclude grouping vars
+fish_p_spp <- mvabund(fish_persist[, 12:63]) #exclude grouping vars
 #fit the model
 fish_p_model <- manyglm(fish_p_spp ~ fish_persist$outbreak_period)
 #test for significance
@@ -219,7 +220,7 @@ upc_filtered <- upc_mod_dat %>%
   filter(!(is.na(group)))
 
 fish_filtered <- fish_mod_dat %>%
-  pivot_longer(12:65, names_to = "species", values_to = "counts")%>%
+  pivot_longer(12:63, names_to = "species", values_to = "counts")%>%
   #dplyr::select(!(transition_site))%>%
   #filter to significant species
   left_join(fish_mvabund, by=c("transition_site","species"), relationship = "many-to-many")%>%
@@ -243,15 +244,6 @@ means_after <- swath_filtered %>%
 
 # Merge the mean counts for "Before" and "After"
 means <- merge(means_before, means_after, by = c("species", "transition_site"))
-
-# Create the dumbbell plot
-ggplot(means) +
-  geom_segment(aes(x = mean_counts_before, xend = mean_counts_after, y = species, yend = species, color = (mean_counts_after > mean_counts_before)), size = 1) +
-  facet_wrap(~ transition_site, scales = "free_y") +
-  scale_color_manual(values = c("blue", "red"), guide = FALSE) +
-  labs(x = "Log(Counts)", y = "Species") +
-  theme_minimal()
-
 
 
 ################################################################################
@@ -323,7 +315,7 @@ fish_pc$species <- factor(fish_pc$species, levels = avg_perc_change$species)
 plot_merge <- rbind(swath_pc, fish_pc, upc_pc) %>%
   mutate(species = str_to_sentence(gsub("_", " ", species)))%>%
   #join with species attributes
-  left_join(spp_attribute, by=c("species" = "genus_species")) %>%
+  left_join(spp_attribute, by=c("species" = "taxa")) %>%
   #drop sea stars
   filter(!(species == "Pycnopodia helianthoides" | species == "Orthasterias koehleri" |
              species == "Pisaster giganteus" | species == "Patiria miniata" | species == "Cirripedia" |
@@ -351,15 +343,12 @@ plot_merge <- rbind(swath_pc, fish_pc, upc_pc) %>%
         # )
         # 
         ) %>%
-  mutate(trophic_ecology = ifelse(trophic_ecology == "Autotroph","Primary producer",trophic_ecology))
-
-
-
-avg_perc_change <- plot_merge %>%
-  group_by(transition_site, species) %>%
-  summarize(avg_change = mean(perc_change, na.rm = TRUE)) %>%
-  arrange(desc(avg_change))
-
+  mutate(trophic_ecology = ifelse(trophic_ecology == "Autotroph","Primary producer",trophic_ecology))%>%
+  #set order
+  mutate(trophic_ecology = factor(trophic_ecology, levels = c(
+    "Planktivore","Detritivore (algal)","Primary producer","Herbivore",
+    "Microinvertivore","Macroinvertivore","Piscivore"
+  )))
 
 
 ################################################################################
@@ -435,12 +424,8 @@ ggplot(plot_merge %>% group_by(transition_site) %>%
   theme_bw() + my_theme + theme(axis.text.y = element_blank())
 
 
-# Define Dark2 color palette
-dark2_palette <- c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E", "#E6AB02", "#A6761D", "#666666")
 
-
-resist_dat <- plot_merge %>% filter(transition_site == "no") %>%
-                mutate(trophic_ecology = ifelse(trophic_ecology == "Autotroph","Primary producer",trophic_ecology))
+resist_dat <- plot_merge %>% filter(transition_site == "no")
 resist_dat$label <- with(resist_dat, ifelse(survey_method == "UPC", paste0("(", round(Before, 2), ", ", round(After, 2), ") *"), paste0("(", round(Before, 2), ", ", round(After, 2), ") \u2020")))
 
 p1 <- ggplot(resist_dat,
@@ -481,7 +466,8 @@ p1 <- ggplot(resist_dat,
     breaks = c(-20000, -10000, -1000, -100, -10, -1, 1, 10, 100, 1000, 10000),
     labels = c(-20000, -10000, -1000, -100, -10, -1, 1, 10, 100, 1000, 10000)
   ) +
-  scale_color_manual(values = setNames(dark2_palette, unique(plot_merge$trophic_ecology))) +
+  scale_color_manual(values = mba_colors("mba3")) +
+  #scale_color_manual(values = mba3_palette) +
   xlab("") +
   ylab("") +
   labs(tag = "A", color = "Trophic function") +
@@ -496,8 +482,7 @@ p1
 transition_dat <- plot_merge %>% filter(transition_site == "yes") %>% filter(!(species == "Leptasterias hexactis" | species == "Cirripidia")) %>%
                     #drop UPC macro
                    filter(!(survey_method == "UPC" & species == "Macrocystis pyrifera")) %>%
-                  filter(!(survey_method == "Swath" & species == "Macrocystis pyrifera" & Before < 2)) %>%
-  mutate(trophic_ecology = ifelse(trophic_ecology == "Autotroph","Primary producer",trophic_ecology))
+                  filter(!(survey_method == "Swath" & species == "Macrocystis pyrifera" & Before < 2)) 
 
 # Create a new column for formatted labels
 transition_dat$label <- with(transition_dat, ifelse(survey_method == "UPC", paste0("(", round(Before, 2), ", ", round(After, 2), ") *"), paste0("(", round(Before, 2), ", ", round(After, 2), ") \u2020" )))
@@ -538,7 +523,7 @@ p2 <- ggplot(transition_dat,
     labels = c(-10000, -1000, -100, -10, -1, 1, 10, 100, 1000, 10000),
     limits = c(-10000, 20000)
   ) +
-  scale_color_manual(values = setNames(dark2_palette, unique(plot_merge$trophic_ecology))) +
+  scale_color_manual(values = mba_colors("mba3")) +
   xlab("") +
   ylab("") +
   labs(tag = "B", color = "Trophic function") +
