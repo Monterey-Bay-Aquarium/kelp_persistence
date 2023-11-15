@@ -154,6 +154,7 @@ spp_table_full1 <- spp_table_full %>%
                     #fix trophic ecology
                     primary_trophic = case_when(
                       taxa == "Mesocentrotus franciscanus" ~ "Herbivore",
+                      taxa == "Leptasterias hexactis" ~ "Detritivore (algal)",
                       TRUE ~ primary_trophic
                     )
                     )
