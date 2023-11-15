@@ -21,7 +21,8 @@ fish_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_fish_cou
 
 #load species attribute table
 spp_attribute <- read.csv(file.path(tabdir,"TableS1_spp_table.csv")) %>% janitor::clean_names() %>%
-                      mutate(taxa = ifelse(taxa == "Loxorhynchus crispatus  or scyra acutifrons","Loxorhynchus crispatus scyra acutifrons",taxa))
+                      mutate(taxa = ifelse(taxa == "Loxorhynchus crispatus  or scyra acutifrons","Loxorhynchus crispatus scyra acutifrons",taxa)) %>%
+                      rename("trophic_ecology"="primary_trophic")
 
 ################################################################################
 #calculate transect means to reduce memory 
@@ -309,9 +310,6 @@ fish_pc$species <- factor(fish_pc$species, levels = avg_perc_change$species)
 
 
 
-
-##merge
-
 plot_merge <- rbind(swath_pc, fish_pc, upc_pc) %>%
   mutate(species = str_to_sentence(gsub("_", " ", species)))%>%
   #join with species attributes
@@ -376,54 +374,7 @@ my_theme <-  theme(axis.text=element_text(size=6, color = "black"),
                    strip.text = element_text(size = 6 ,face="bold", color = "black", hjust=0),
 )
 
-# Create ggplot plot
-
-ggplot(plot_merge %>% group_by(transition_site) %>%
-         mutate(species = tidytext::reorder_within(species, perc_change, transition_site),
-                #make sentence case
-                species = str_to_sentence(gsub("_", " ", species)),
-                #remove trailing spaces
-                species = str_remove(str_trim(species), "\\s+\\w+$")),
-       aes(x = perc_change, y = reorder(species, perc_change, FUN = function(x) -max(x)))) +
-  geom_point(aes(color = trophic_ecology)) +
-  geom_segment(aes(x = 0, xend = perc_change, yend = species, color = trophic_ecology), linetype = "solid") +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  #add genus species labels
-  geom_text(
-    aes(x = ifelse(plot_merge$perc_change >= 0, 0.1, -0.1), label = species, fontface = "italic"),
-    hjust = ifelse(plot_merge$perc_change >= 0, 0, 1),
-    color = "black",
-    size = 3,
-    position = position_nudge(y = -0.2)
-  ) +
-  #add common name labels
-  geom_text(
-    aes(x = ifelse(plot_merge$perc_change >= 0, 0.1, -0.1), label = common_name),
-    hjust = ifelse(plot_merge$perc_change >= 0, 0, 1),
-    color = "black",
-    size = 3,
-    position = position_nudge(y =0.2)
-  ) +
-  #add pre-post densities
-  geom_text(
-    aes(x = perc_change, label = paste0("(",round(Before,2),", ",round(After,2),")")),
-    #hjust = ifelse(plot_merge$perc_change >= 0, 1, -1),
-    color = "black",
-    size = 3,
-    position = position_nudge(y = 0.2)
-  ) +
-  scale_x_continuous(
-    trans = ggallin::pseudolog10_trans,
-    breaks = c(-20000, -10000, -1000, -100, -10, -1, 1, 10, 100, 1000, 10000),
-    labels = c(-20000, -10000, -1000, -100, -10, -1, 1, 10, 100, 1000, 10000)
-  ) +
-  scale_color_brewer(palette = "Dark2")+
-  facet_wrap(~ transition_site, ncol = 2, scales = "free_y") +
-  xlab("Percentage Change") +
-  ylab("Species") +
-  theme_bw() + my_theme + theme(axis.text.y = element_blank())
-
-
+col_pal <- setNames(mba_colors("mba3"), levels(factor(plot_merge$trophic_ecology)))
 
 resist_dat <- plot_merge %>% filter(transition_site == "no")
 resist_dat$label <- with(resist_dat, ifelse(survey_method == "UPC", paste0("(", round(Before, 2), ", ", round(After, 2), ") *"), paste0("(", round(Before, 2), ", ", round(After, 2), ") \u2020")))
@@ -466,7 +417,7 @@ p1 <- ggplot(resist_dat,
     breaks = c(-20000, -10000, -1000, -100, -10, -1, 1, 10, 100, 1000, 10000),
     labels = c(-20000, -10000, -1000, -100, -10, -1, 1, 10, 100, 1000, 10000)
   ) +
-  scale_color_manual(values = mba_colors("mba3")) +
+  scale_color_manual(values = col_pal) +
   #scale_color_manual(values = mba3_palette) +
   xlab("") +
   ylab("") +
@@ -486,6 +437,7 @@ transition_dat <- plot_merge %>% filter(transition_site == "yes") %>% filter(!(s
 
 # Create a new column for formatted labels
 transition_dat$label <- with(transition_dat, ifelse(survey_method == "UPC", paste0("(", round(Before, 2), ", ", round(After, 2), ") *"), paste0("(", round(Before, 2), ", ", round(After, 2), ") \u2020" )))
+
 
 p2 <- ggplot(transition_dat,
              aes(x = perc_change, y = reorder(species, -perc_change))) +
@@ -523,7 +475,7 @@ p2 <- ggplot(transition_dat,
     labels = c(-10000, -1000, -100, -10, -1, 1, 10, 100, 1000, 10000),
     limits = c(-10000, 20000)
   ) +
-  scale_color_manual(values = mba_colors("mba3")) +
+  scale_color_manual(values = col_pal) +
   xlab("") +
   ylab("") +
   labs(tag = "B", color = "Trophic function") +
@@ -546,7 +498,7 @@ combined_plot_annotated <- ggpubr::annotate_figure(combined_plot,
 
 combined_plot
 
-ggsave(combined_plot_annotated, filename=file.path(figdir, "Fig4_mvabund2.png"), bg = "white",
+ggsave(combined_plot_annotated, filename=file.path(figdir, "Fig4_mvabund3.png"), bg = "white",
        width=8.5, height=10, units="in", dpi=600) 
 
 
