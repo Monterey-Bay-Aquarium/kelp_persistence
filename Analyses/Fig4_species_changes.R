@@ -3,7 +3,9 @@
 
 rm(list=ls())
 
-librarian::shelf(tidyverse, here, ggplot2, mvabund)
+librarian::shelf(tidyverse, here, ggplot2, mvabund, MBAcolors)
+
+#devtools::install_github("MontereyBayAquarium/MBAcolors")
 
 
 ################################################################################
