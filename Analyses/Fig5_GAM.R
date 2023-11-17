@@ -335,7 +335,7 @@ g2 <- ggplot(data = envr_plot,
              ),
              strip.position = "left")+
   #ylim(1,4)+
-  labs(x = "", y="Site type", tag = "B", title = "Features of persistent and transitioned forests")+
+  labs(x = "Site type", y="", tag = "B", title = "Features of persistent and transitioned forests")+
   MBAcolors::scale_fill_mba("mba2", type = "discrete", rev=TRUE)+
   theme_classic()+
   my_theme+
