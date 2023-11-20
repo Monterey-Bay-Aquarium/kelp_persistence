@@ -13,22 +13,12 @@ librarian::shelf(tidyverse, here, vegan, ggplot2, cluster, ggforce,
 
 ################################################################################
 #set directories and load data
-basedir <- "/Volumes/seaotterdb$/kelp_recovery/"
+basedir <- here::here("output")
 
-stan_dat <- read.csv(file.path(basedir, "data/subtidal_monitoring/processed/kelp_stan_CC.csv")) 
+mv_dat <- load(file.path(basedir, "monitoring_data/processed/multivariate_data.Rdata")) 
 
-tab_dir <- here::here("analyses","4patch_drivers","Tables")
+tab_dir <- here::here("tables")
 
-################################################################################
-#pre-analysis processing
-
-#replace any NAs with 0
-stan_dat <- stan_dat %>% mutate(across(where(is.numeric), ~replace_na(., 0)))  # %>%
-  #test permova if urchins, kelp, and sea stars are removed
-  #dplyr::select(!(c(strongylocentrotus_purpuratus, macrocystis_pyrifera,
-   #                 pycnopodia_helianthoides, pisaster_brevispinus,
-    #                pisaster_giganteus, pisaster_ochraceus,
-     #              dermasterias_imbricata)))
 
 
 ################################################################################
@@ -37,20 +27,10 @@ stan_dat <- stan_dat %>% mutate(across(where(is.numeric), ~replace_na(., 0)))  #
 #----------------process standardized data--------------------------------------
 
 #define group vars
-stan_group_vars <- stan_dat %>% 
-                   dplyr::select(1:9) %>%
+stan_group_vars <- stan_group_vars %>% 
                     mutate(site_period = paste(site, MHW),
                            outbreak_period = ifelse(year <2014, "before","after"),
                            site_outbreak = paste(site, ifelse(year <2014, "before","after")))
-
-#define data for ordination
-stan_ord_dat <- stan_dat %>% dplyr::select(10:ncol(.))
-
-#standardize to max 
-stan_rel <- decostand(stan_ord_dat, method = "hellinger")
-
-#generate a BC mat with stan dat
-stan_max_distmat <- vegdist(stan_rel, method = "bray", na.rm = T)
 
 
 ################################################################################
@@ -100,8 +80,12 @@ site_result_tab <- pair_perm %>% map_dfr(~tidy(.x), .id="name")%>%
   #filter matrix
   filter(site_1 == site_2,
          period_1 == "before")%>%
-  dplyr::select(site = site_1,
-                period_1, period_2, df, SumOfSqs, R2, statistic, p.value)
+  dplyr::select(Site = site_1,
+                DF = df, `Sum of Sq.` = SumOfSqs, `R-squared` = R2, `F` = statistic, `P(perm)` = p.value) %>%
+  mutate(Site = gsub("_", " ", Site),
+         Site = tolower(Site),
+         Site = tools::toTitleCase(Site),
+         Site = sub("(.*)( Dc| Uc)$", "\\1\\U\\2", Site, perl = TRUE))
 
 
 
