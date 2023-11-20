@@ -11,11 +11,11 @@ librarian::shelf(tidyverse, here, vegan, ggplot2, cluster, ggforce, data.table,
 
 ################################################################################
 #set directories and load data
-basedir <- "/Volumes/seaotterdb$/kelp_recovery/"
-outdir <- here::here("analyses","4patch_drivers","Output")
-figdir <- here::here("analyses","4patch_drivers","Figures")
+basedir <- here::here("output")
+figdir <- here::here("figures")
+tabdir <- here::here("tables")
 
-load(file.path(outdir,"multivariate_data.Rdata"))
+load(file.path(basedir,"monitoring_data/processed/multivariate_data.Rdata"))
 
 
 ################################################################################
@@ -94,6 +94,33 @@ for (i in 1:(num_sites - 1)) {
                                                    p_value = p_value))
   }
 }
+
+################################################################################
+#export table
+
+# Assuming result_table is your data frame
+result_matrix <- reshape2::acast(result_table, site1 ~ site2, value.var = "correlation")
+
+# Format row names
+rownames(result_matrix) <- result_matrix %>%
+  rownames() %>%
+  gsub("_", " ", .) %>%
+  tolower() %>%
+  tools::toTitleCase() %>%
+  sub("(.*)( Dc| Uc)$", "\\1\\U\\2", ., perl = TRUE)
+
+# Format column names
+colnames(result_matrix) <- colnames(result_matrix) %>%
+  gsub("_", " ", .) %>%
+  tolower() %>%
+  tools::toTitleCase() %>%
+  sub("(.*)( Dc| Uc)$", "\\1\\U\\2", ., perl = TRUE)
+
+result_matrix <- result_matrix %>%
+  as.matrix()%>%
+  apply(2, function(x) ifelse(is.na(x), "-", as.character(round(as.numeric(x), 2))))
+
+write.csv(result_matrix, file = file.path(tabdir,"TableS3_procrutes_cor.csv"), row.names = TRUE)
 
 ################################################################################
 #Plot
