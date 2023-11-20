@@ -151,13 +151,44 @@ spp_table_full1 <- spp_table_full %>%
                       taxa == "Cancridae" ~ "Cancridae family",
                       TRUE ~ taxa
                     ),
+                    #fix taxonomic
+                    primary_taxonomic = case_when(
+                      taxa == "Sebastes chrysomelas" ~ "Fish",
+                      taxa == "Aplysia vaccaria" ~ "Invertebrate",
+                      taxa == "Phaeophyceae" ~ "Algae",
+                      taxa == "Leptasterias hexactis" ~ "Invertebrate",
+                      taxa == "Dictyotales" ~ "Algae",
+                      taxa == "Cancridae family" ~ "Invertebrate",
+                      TRUE ~ primary_taxonomic
+                    ),
                     #fix trophic ecology
                     primary_trophic = case_when(
                       taxa == "Mesocentrotus franciscanus" ~ "Herbivore",
+                      taxa == "Aplysia vaccaria" ~ "Herbivore",
                       taxa == "Leptasterias hexactis" ~ "Detritivore (algal)",
+                      taxa == "Sebastes chrysomelas" ~ "Macroinvertivore",
+                      taxa == "Phaeophyceae" ~ "Autotroph",
+                      taxa == "Dictyotales" ~ "Autotroph",
+                      taxa == "Cancridae family" ~ "Macroinvertivore",
                       TRUE ~ primary_trophic
+                    ),
+                    #fix common name
+                    common_name = case_when(
+                      taxa == "Aplysia vaccaria" ~ "Black sea hare",
+                      taxa == "Leptasterias hexactis" ~ "Six-rayes star",
+                      taxa == "Sebastes chrysomelas" ~ "Black-and-yellow rockfish",
+                      taxa == "Phaeophyceae" ~ "Brown algae",
+                      taxa == "Dictyotales" ~ "Brown algae",
+                      taxa == "Cancridae family" ~ "Crabs",
+                      TRUE ~ common_name
                     )
-                    )
+                    )%>%
+    arrange(survey_method, taxa)%>%
+    rename('Method' = survey_method,
+           Taxa = taxa,
+           "Common name" = common_name,
+           "Taxonomic level" = primary_taxonomic,
+           "Trophic ecology" = primary_trophic)
 
 
 write.csv(spp_table_full1, file.path(tabdir, "TableS1_spp_table.csv"), row.names = FALSE)
