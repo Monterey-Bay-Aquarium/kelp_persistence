@@ -10,7 +10,7 @@ librarian::shelf(tidyverse, here, vegan, cowplot, ggpubr, mgcv, gratia)
 #set directories and load data
 basedir <- here::here("output")
 figdir <- here::here("figures")
-tab_dir <- here::here("tables")
+tabdir <- here::here("tables")
 
 #load sampling data
 swath_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_swath_counts_CC.csv")) %>%
@@ -160,9 +160,7 @@ full_gam <- mgcv::gam(stipe_mean ~
                             #use shrinkage selection (Marra and Wood 2011) 
                             #with a double penalty approach
                             select = TRUE) 
-              
-
-summary(full_gam)
+            
 
 #drop shrinkage terms
 red_gam <- mgcv::gam(stipe_mean ~ 
@@ -196,6 +194,40 @@ summary_info <- summary(red_gam)
 gam_terms <- data.frame(summary_info$s.table) %>%
   tibble::rownames_to_column(var = "smooth") %>%
   rename("EDF" = "edf")
+
+################################################################################
+#export model table
+library(flextable)
+set_flextable_defaults(background.color = "white")
+
+A <- as_flextable(full_gam) 
+A <- add_header_lines(A,values = "Full model")
+
+save_as_image(A, path = file.path(figdir, "archive/gam_a.png"), dpi=600)
+
+
+B <- flextable::as_flextable(red_gam)
+B <-flextable::add_header_lines(B,values = "Reduced model")
+
+save_as_image(B, path = file.path(figdir, "archive/gam_b.png"), dpi = 600)
+
+
+# Load PNG images
+img_a <- png::readPNG(file.path(figdir, "archive/gam_a.png"), native = TRUE)
+img_b <- png::readPNG(file.path(figdir, "archive/gam_b.png"), native = TRUE)
+
+# Create a blank ggplot
+plot <- ggplot() +
+  theme_void()
+
+plot <- plot +
+  annotation_custom(grid::rasterGrob(img_a), xmin = 0, xmax = 1, ymin = 0.5, ymax = 1) +
+  annotation_custom(grid::rasterGrob(img_b), xmin = 0, xmax = 1, ymin = 0, ymax = 0.5)
+
+#print(plot)
+
+ggsave(file.path(tabdir, "TableS3_GAM_results.png"), plot, dpi = 600,
+       bg = "white", width = 4, height = 6, units = "in")
 
 
 ################################################################################
