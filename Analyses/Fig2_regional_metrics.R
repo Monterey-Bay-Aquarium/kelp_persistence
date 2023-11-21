@@ -189,7 +189,7 @@ kelp_alphadiv <- cbind(kelp_groups, kelp_richness, kelp_shannon, kelp_simpson, k
 #Step 4 - examine site cohesion and distance changes over time
 
 
-stan_group_vars2 <- stan_group_vars %>% mutate(period = ifelse(year < 2013,"Before","After"),
+stan_group_vars2 <- stan_group_vars %>% mutate(period = ifelse(year < 2014,"Before","After"),
                                                site_period = paste(site, period),
                                                year_site_period = paste(year, site, period)) %>% data.frame()
 
@@ -280,7 +280,7 @@ my_theme <-  theme(axis.text=element_text(size=10, color = "black"),
 
 
 #plot NMDS
-stan_trajectory <- ggplot(data = cent %>% mutate(basin = ifelse(year < 2012, "before",ifelse(year > 2014, "after",NA))),
+stan_trajectory <- ggplot(data = cent %>% mutate(basin = ifelse(year < 2014, "before",ifelse(year > 2014, "after",NA))),
                           aes(NMDS1, NMDS2)) +
   geom_segment(aes(x = NMDS1, y = NMDS2, xend = lead(NMDS1), yend = lead(NMDS2)),
                arrow = arrow(length = unit(0.25, "cm"), type = "closed"),
@@ -457,7 +457,7 @@ region_wide_plot <- ggpubr::ggarrange(stan_trajectory, combined_plot, ncol=2, wi
 cen_plot <- ggplot(cen_distance, aes(x = as.numeric(as.character(year)), y = distance, group = site)) +
   geom_line(aes(color = "Sites (n=24)"), alpha = 0.7) +
   geom_smooth(aes(color = "Median", group = 1), method = "loess", span = 0.4, alpha = 0.8) +
-  labs(x = "Year", y = "Distance (Euclidean) to 2007-2012 centroid", tag = "B",
+  labs(x = "Year", y = "Distance (Euclidean) to 2007-2013 centroid", tag = "B",
        title = "Temporal stability",
        color = "") +  # Set the legend title here
   scale_color_manual(values = c("Median" = "black","Sites (n=24)" = "lightblue")) +
@@ -485,9 +485,10 @@ left
 
 final_plot <- ggpubr::ggarrange(left, combined_plot, ncol=2)
 
+final_plot
 
-#ggsave(final_plot, filename=file.path(figdir, "Fig3_regional_metrics_new8.png"), bg = "white",
- #  width=8, height=7.5, units="in", dpi=600) 
+ggsave(final_plot, filename=file.path(figdir, "Fig3_regional_metrics_new8.png"), bg = "white",
+   width=8, height=7.5, units="in", dpi=600) 
 
 
 
