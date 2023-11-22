@@ -8,6 +8,11 @@ librarian::shelf(tidyverse, here, ggplot2, mvabund, MBAcolors)
 #devtools::install_github("MontereyBayAquarium/MBAcolors")
 
 
+##ISSUES:
+
+#Need to check legend in final figure. It appears to be missing Detritivore (algal)
+#perhaps because none in panel A. 
+
 ################################################################################
 #set directories and load data
 basedir <- here::here("output")
@@ -22,9 +27,9 @@ upc_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_upc_cov_C
 fish_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_fish_counts_CC.csv"))
 
 #load species attribute table
-spp_attribute <- read.csv(file.path(tabdir,"TableS1_spp_table.csv")) %>% janitor::clean_names() %>%
-                      mutate(taxa = ifelse(taxa == "Loxorhynchus crispatus  or scyra acutifrons","Loxorhynchus crispatus scyra acutifrons",taxa)) %>%
-                      rename("trophic_ecology"="primary_trophic")
+spp_attribute <- read.csv(file.path(tabdir,"TableS1_spp_table.csv")) %>% janitor::clean_names() #%>%
+                      #mutate(taxa = ifelse(taxa == "Loxorhynchus crispatus  or scyra acutifrons","Loxorhynchus crispatus scyra acutifrons",taxa)) %>%
+                      #rename("trophic_ecology"="primary_trophic")
 
 ################################################################################
 #calculate transect means to reduce memory 
@@ -271,8 +276,6 @@ swath_pc$species <- factor(swath_pc$species, levels = avg_perc_change$species)
 
 
 
-
-
 # Calculate percent change for each species within each transition site
 upc_pc <- upc_filtered %>%
   group_by(transition_site, outbreak_period, species)%>%
@@ -379,7 +382,7 @@ my_theme <-  theme(axis.text=element_text(size=6, color = "black"),
 col_pal <- setNames(mba_colors("mba3"), levels(factor(plot_merge$trophic_ecology)))
 
 resist_dat <- plot_merge %>% filter(transition_site == "no")
-resist_dat$label <- with(resist_dat, ifelse(survey_method == "UPC", paste0("(", round(Before, 2), ", ", round(After, 2), ") *"), paste0("(", round(Before, 2), ", ", round(After, 2), ") \u2020")))
+resist_dat$label <- with(resist_dat, ifelse(method == "UPC", paste0("(", round(Before, 2), ", ", round(After, 2), ") *"), paste0("(", round(Before, 2), ", ", round(After, 2), ") \u2020")))
 
 p1 <- ggplot(resist_dat,
              aes(x = perc_change, y = reorder(species, -perc_change))) +
@@ -427,6 +430,7 @@ p1 <- ggplot(resist_dat,
   ggtitle("Persistent") +
   theme_bw() +
   my_theme +
+  guides(color = "none")+
   theme(axis.text.y = element_blank())
 
 p1
@@ -434,11 +438,11 @@ p1
 
 transition_dat <- plot_merge %>% filter(transition_site == "yes") %>% filter(!(species == "Leptasterias hexactis" | species == "Cirripidia")) %>%
                     #drop UPC macro
-                   filter(!(survey_method == "UPC" & species == "Macrocystis pyrifera")) %>%
-                  filter(!(survey_method == "Swath" & species == "Macrocystis pyrifera" & Before < 2)) 
+                   filter(!(method == "UPC" & species == "Macrocystis pyrifera")) %>%
+                  filter(!(method == "Swath" & species == "Macrocystis pyrifera" & Before < 2)) 
 
 # Create a new column for formatted labels
-transition_dat$label <- with(transition_dat, ifelse(survey_method == "UPC", paste0("(", round(Before, 2), ", ", round(After, 2), ") *"), paste0("(", round(Before, 2), ", ", round(After, 2), ") \u2020" )))
+transition_dat$label <- with(transition_dat, ifelse(method == "UPC", paste0("(", round(Before, 2), ", ", round(After, 2), ") *"), paste0("(", round(Before, 2), ", ", round(After, 2), ") \u2020" )))
 
 
 p2 <- ggplot(transition_dat,
