@@ -18,7 +18,7 @@ swath_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_swath_c
   mutate(stipe_den_m2 = macrocystis_pyrifera/60)
 
 #load model predictors
-mod_predict <- readRDS(file.path(basedir, "monitoring_data/processed/envr_at_pisco_sites.Rds"))
+mod_predict <- readRDS(file.path(basedir, "environmental_data/processed/envr_at_pisco_sites.Rds"))
 
 #load published urchin behavior data
 #accessed from "https://github.com/joshgsmith/PatchDynamics/blob/main/Data/raw_data/patch_data.csv"
