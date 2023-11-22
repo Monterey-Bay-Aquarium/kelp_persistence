@@ -11,8 +11,8 @@ librarian::shelf(tidyverse, here, vegan, ggplot2, cluster, ggforce)
 ################################################################################
 #set directories and load data
 
-figdir <- here::here("analyses","4patch_drivers","Figures")
-basedir <- here::here("analyses","4patch_drivers","Output")
+figdir <- here::here("figures")
+basedir <- here::here("output","monitoring_data","processed")
 
 #load standardized dat
 stan_dat <- read.csv(file.path(basedir, "kelp_stan_CC.csv")) 
