@@ -6,15 +6,16 @@ rm(list=ls())
 librarian::shelf(tidyverse, here, vegan)
 
 
+
 ################################################################################
 #set directories and load data
-basedir <- "/Volumes/seaotterdb$/kelp_recovery/"
+basedir <- here::here("output","monitoring_data","processed")
 
-fish_raw <- read.csv(file.path(basedir, "data/subtidal_monitoring/processed/kelp_fish_counts_CC.csv")) 
+fish_raw <- read.csv(file.path(basedir, "kelp_fish_counts_CC.csv")) 
 
-upc_raw <- read.csv(file.path(basedir, "data/subtidal_monitoring/processed/kelp_upc_cov_CC.csv")) 
+upc_raw <- read.csv(file.path(basedir, "kelp_upc_cov_CC.csv")) 
 
-swath_raw <- read.csv(file.path(basedir, "data/subtidal_monitoring/processed/kelp_swath_counts_CC.csv")) 
+swath_raw <- read.csv(file.path(basedir, "kelp_swath_counts_CC.csv")) 
 
 
 ################################################################################
