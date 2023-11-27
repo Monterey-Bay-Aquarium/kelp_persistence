@@ -374,6 +374,57 @@ my_theme <-  theme(axis.text=element_text(size=6, color = "black"),
                    strip.text = element_text(size = 6 ,face="bold", color = "black", hjust=0),
 )
 
+exhibits <- list(
+  mba3 = rbind(c('#1B9E77','#6BA4AF', '#E5C200', '#7570b3','#6C2D1C', '#EE69AD','#E7A070','#E7298A'),c(1,2,3,4,5,6,7,8)))
+
+mba_colors <- function(exhibit, n_colors, type = c("discrete", "continuous"), rev = FALSE) {
+  
+  # Retrieve the palette based on the provided name
+  custom_pal <- exhibits[[exhibit]]
+  
+  # Check if the palette exists
+  if (is.null(custom_pal)){
+    stop("Palette not found.")
+  }
+  
+  # Check if we need to reverse the palette
+  if (rev) {
+    custom_pal[1,] <- rev(custom_pal[1,])
+  }
+  
+  # If n_colors is not provided, set it to the length of the palette
+  if (missing(n_colors)) {
+    n_colors <- length(custom_pal[1,])
+  }
+  
+  # If type is not provided, determine it based on the number of colors
+  if (missing(type)) {
+    if (n_colors > length(custom_pal[1,])) {
+      type <- "continuous"
+    } else {
+      type <- "discrete"
+    }
+  }
+  type <- match.arg(type)
+  
+  # Check if the requested number of colors is valid for a discrete palette
+  if (type == "discrete" && n_colors > length(custom_pal[1,])) {
+    stop("Number of requested colors greater than what the discrete palette can offer. Use as continuous instead.")
+  }
+  
+  # Generate the color palette based on the type
+  palette_colors <- switch(type,
+                           continuous = grDevices::colorRampPalette(custom_pal[1,])(n_colors),
+                           discrete = custom_pal[1,][custom_pal[2,] %in% c(1:n_colors)]
+  )
+  
+  # Return the palette with its class and name attributes
+  structure(palette_colors, class = "MBAPalette", name = exhibit)
+}
+
+
+
+
 col_pal <- setNames(mba_colors("mba3"), levels(factor(plot_merge$trophic_ecology)))
 
 resist_dat <- plot_merge %>% filter(transition_site == "no")
