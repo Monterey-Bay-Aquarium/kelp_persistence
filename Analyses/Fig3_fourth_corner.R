@@ -42,9 +42,9 @@ fish_build1 <- fish_raw %>% dplyr::select(where(~ any(. != 0)))
 
 swath_long <- swath_build1 %>% 
               pivot_longer(cols = 12:68, names_to = "taxa", values_to = "density") %>%
-              mutate(survey_method = "Swath") %>%
+              mutate(method = "Swath") %>%
               #join traits
-              left_join(spp_attribute, by = c("survey_method","taxa")) %>%
+              left_join(spp_attribute, by = c("method","taxa")) %>%
               #fix taxa
               mutate(trophic_ecology = case_when(
                 taxa == "cancridae" ~ "Macroinvertivore",
@@ -78,14 +78,17 @@ swath_Q <- swath_long %>%
           as.data.frame() 
 
 
+nrow(swath_L)
+nrow(swath_R)
+
 #----------------------------------UPC-----------------------------------------#
 
 
 upc_long <- upc_build1 %>% 
   pivot_longer(cols = 12:50, names_to = "taxa", values_to = "density") %>%
-  mutate(survey_method = "UPC") %>%
+  mutate(method = "UPC") %>%
   #join traits
-  left_join(spp_attribute, by = c("survey_method","taxa")) %>% # %>% filter(is.na(trophic_ecology)) %>% distinct(taxa)
+  left_join(spp_attribute, by = c("method","taxa")) %>% # %>% filter(is.na(trophic_ecology)) %>% distinct(taxa)
   mutate(density = coalesce(density, 0))
 
 upc_L <- upc_long %>%
@@ -112,16 +115,18 @@ upc_Q <- upc_long %>%
   mutate(trophic_ecology = factor(trophic_ecology))%>%
   as.data.frame() 
 
+nrow(upc_L)
+nrow(upc_R)
 
 #----------------------------------FISH----------------------------------------#
 
 
 fish_long <- fish_build1 %>% 
   pivot_longer(cols = 12:64, names_to = "taxa", values_to = "density") %>%
-  mutate(survey_method = "Fish") %>%
+  mutate(method = "Fish") %>%
   #join traits
-  left_join(spp_attribute, by = c("survey_method","taxa")) # %>% filter(is.na(trophic_ecology)) %>% distinct(taxa)
-
+  left_join(spp_attribute, by = c("method","taxa")) %>% # %>% filter(is.na(trophic_ecology)) %>% distinct(taxa)
+  mutate(density = coalesce(density, 0))
 
 fish_L <- fish_long %>%
   dplyr::select(!(c(common_name, taxonomic_level, trophic_ecology)))%>%
@@ -148,6 +153,8 @@ fish_Q <- fish_long %>%
   as.data.frame() 
 
 
+nrow(fish_L)
+nrow(fish_R)
 
 ################################################################################
 # trait based models
@@ -295,12 +302,13 @@ g <- ggplot(fourth_dat, aes(x = `Heatwave period`, y = `Trophic ecology`, fill =
   geom_point(data=fourth_dat %>% filter(Coef==0), shape="x") +
   # Labels
   labs(x="Marine heatwave", y="", tag="") +
-  scale_fill_mba("drifters2",n_colors=50, type = "continuous", name = "Effect") +
+  #scale_fill_mba("drifters2",n_colors=50, type = "continuous", name = "Effect") +
+  scale_fill_gradient2(low = "navyblue",high = "indianred",mid = "gray80")+
   guides(fill = guide_colorbar(ticks.colour = "black", frame.colour = "black")) +
   # Theme
   theme_bw() + 
   my_theme
-
+g
 
 # export
 ggsave(g, filename = file.path(figdir, "Fig3_fourth_corner.png"), 

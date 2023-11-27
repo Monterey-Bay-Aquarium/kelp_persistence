@@ -8,11 +8,6 @@ librarian::shelf(tidyverse, here, ggplot2, mvabund, MBAcolors)
 #devtools::install_github("MontereyBayAquarium/MBAcolors")
 
 
-##ISSUES:
-
-#Need to check legend in final figure. It appears to be missing Detritivore (algal)
-#perhaps because none in panel A. 
-
 ################################################################################
 #set directories and load data
 basedir <- here::here("output")

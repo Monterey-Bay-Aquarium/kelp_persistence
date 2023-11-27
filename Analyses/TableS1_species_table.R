@@ -190,6 +190,12 @@ spp_table_full1 <- spp_table_full %>%
            "Taxonomic level" = primary_taxonomic,
            "Trophic ecology" = primary_trophic)
 
+#add missing taxa
+missing_taxa <- c("Fish","Brachyistius frenatus","Kelp perch","Fish","Microinvertivore")
+spp_table_full1 <- rbind(spp_table_full1, missing_taxa)
+
+
+
 
 write.csv(spp_table_full1, file.path(tabdir, "TableS1_spp_table.csv"), row.names = FALSE)
 
