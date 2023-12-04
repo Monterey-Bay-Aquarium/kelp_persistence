@@ -321,25 +321,19 @@ plot_merge <- rbind(swath_pc, fish_pc, upc_pc) %>%
   #rename common names
   mutate(common_name = str_to_sentence(common_name),
          trophic_ecology = str_to_sentence(trophic_ecology),
-         #common_name = case_when(
-          # common_name == "Red algae (lacy branching)" ~ "Red algae (lacy)",
-          # common_name == "Red algae (branching flat blade)" ~ "Red algae (branching)",
-          # common_name == "Decorator crab, moss crab" ~ "Decorator or moss crab",
-          # common_name == "Tunicate colonial,compund,social" ~ "Colonial tunicate",
-         #  TRUE ~common_name
-        #   ),
-         #fix trophic ecology
-        # trophic_ecology = ifelse(common_name == "Red sea urchin","Herbivore",trophic_ecology),
-        # species = case_when(
-        #   species == "Red algae lacy branching" ~ "",
-        #   species == "Red algae leaf like" ~ "",
-           #species == "Coralline algae crustose" ~ "",
-           #species == "Red algae encrusting" ~ "",
-           #species == "Dictyoneurum californicum reticulatum" ~ "Dictyoneurum spp.",
-           #species == "Tunicate colonial,compund,social" ~ "",
-        #   TRUE ~ species
-        # )
-        # 
+         common_name = case_when(
+           common_name == "Red algae (leaflike)" ~ "Red algae (leaf-like)",
+           common_name == "Tube snail, scaled worm shell" ~ "Tube snail",
+           common_name == "Purple urchin" ~ "Purple sea urchin",
+           common_name == "Decorator crab, moss crab" ~ "Decorator or moss crab",
+           common_name == "Red algae (leaflike)" ~ "Red algae (leaf-like)",
+           common_name == "Tunicate colonial,compund,social" ~ "Tunicate (colony-forming)",
+           TRUE ~ common_name
+         ),
+         species = case_when(
+           species == "Tunicate colonial compund social" ~ "Tunicate (colony-forming)",
+           TRUE ~ species
+         )
         ) %>%
   mutate(trophic_ecology = ifelse(trophic_ecology == "Autotroph","Primary producer",trophic_ecology))%>%
   #set order
@@ -352,7 +346,7 @@ plot_merge <- rbind(swath_pc, fish_pc, upc_pc) %>%
 ################################################################################
 #Plot
 
-my_theme <-  theme(axis.text=element_text(size=6, color = "black"),
+my_theme <-  theme(axis.text=element_text(size=8, color = "black"),
                    axis.text.y = element_text(angle = 90, hjust = 0.5, color = "black"),
                    axis.title=element_text(size=8, color = "black"),
                    plot.tag=element_text(size=8, face="plain", color = "black"),
@@ -430,6 +424,10 @@ col_pal <- setNames(mba_colors("mba3"), levels(factor(plot_merge$trophic_ecology
 resist_dat <- plot_merge %>% filter(transition_site == "no")
 resist_dat$label <- with(resist_dat, ifelse(method == "UPC", paste0("(", round(Before, 2), ", ", round(After, 2), ") *"), paste0("(", round(Before, 2), ", ", round(After, 2), ") \u2020")))
 
+# Calculate the number of unique species where perc_change < 0 and perc_change > 0
+n_negative <- sum(resist_dat$perc_change < 0)
+n_positive <- sum(resist_dat$perc_change > 0)
+
 p1 <- ggplot(resist_dat,
              aes(x = perc_change, y = reorder(species, -perc_change))) +
   geom_point(aes(color = trophic_ecology)) +
@@ -477,7 +475,12 @@ p1 <- ggplot(resist_dat,
   theme_bw() +
   my_theme +
   guides(color = "none")+
-  theme(axis.text.y = element_blank())
+  theme(axis.text.y = element_blank())+
+  #add text for the number of taxa
+  annotate("text", x = -Inf, y = Inf, label = paste("n =", n_negative), vjust = 1.2, hjust = -0.1, 
+           color = "black", size = 3) +
+  annotate("text", x = Inf, y = Inf, label = paste("n =", n_positive), vjust = 1.2, hjust = 1.1, 
+           color = "black", size = 3)
 
 p1
 
@@ -490,6 +493,10 @@ transition_dat <- plot_merge %>% filter(transition_site == "yes") %>% filter(!(s
 # Create a new column for formatted labels
 transition_dat$label <- with(transition_dat, ifelse(method == "UPC", paste0("(", round(Before, 2), ", ", round(After, 2), ") *"), paste0("(", round(Before, 2), ", ", round(After, 2), ") \u2020" )))
 
+
+# Calculate the number of unique species where perc_change < 0 and perc_change > 0
+n_negative <- sum(transition_dat$perc_change < 0)
+n_positive <- sum(transition_dat$perc_change > 0)
 
 p2 <- ggplot(transition_dat,
              aes(x = perc_change, y = reorder(species, -perc_change))) +
@@ -534,7 +541,12 @@ p2 <- ggplot(transition_dat,
   ggtitle("Transitioned") +
   theme_bw() +
   my_theme +
-  theme(axis.text.y = element_blank())
+  theme(axis.text.y = element_blank())+
+  #add text for the number of taxa
+  annotate("text", x = -Inf, y = Inf, label = paste("n =", n_negative), vjust = 1.2, hjust = -0.1, 
+           color = "black", size = 3) +
+  annotate("text", x = Inf, y = Inf, label = paste("n =", n_positive), vjust = 1.2, hjust = 1.1, 
+           color = "black", size = 3)
 
 p2
 
@@ -550,7 +562,7 @@ combined_plot_annotated <- ggpubr::annotate_figure(combined_plot,
 
 combined_plot
 
-ggsave(combined_plot_annotated, filename=file.path(figdir, "Fig4_mvabund3.png"), bg = "white",
+ggsave(combined_plot_annotated, filename=file.path(figdir, "Fig4_mvabund4.png"), bg = "white",
        width=8.5, height=10, units="in", dpi=600) 
 
 
