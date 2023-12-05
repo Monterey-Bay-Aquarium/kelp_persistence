@@ -557,7 +557,7 @@ combined_plot <- ggpubr::ggarrange(p1, p2, common.legend = TRUE, align = "h")
 combined_plot_annotated <- ggpubr::annotate_figure(combined_plot,
                 bottom = ggpubr::text_grob("Percent change", 
                                    hjust = 4.6, x = 1, size = 10),
-                left = ggpubr::text_grob("Species", rot = 90, size = 10, vjust=2)
+                left = ggpubr::text_grob("", rot = 90, size = 10, vjust=2)
 )
 
 combined_plot
