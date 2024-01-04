@@ -25,7 +25,8 @@ spp_attribute <- read.csv(file.path(tabdir,"TableS1_spp_table.csv")) %>% janitor
                           #fix names
                           taxa = ifelse(taxa == "loxorhynchus_crispatus__or_scyra_acutifrons",
                                         "loxorhynchus_crispatus_scyra_acutifrons",
-                                        taxa))
+                                        taxa)) %>%
+                  dplyr::select(-x)
 
 
 ################################################################################
@@ -296,14 +297,14 @@ my_theme <-  theme(axis.text=element_text(size=8, color = "black"),
 
 # Plot all four corner results
 g <- ggplot(fourth_dat, aes(x = `Heatwave period`, y = `Trophic ecology`, fill = beta_sd)) +
-  facet_col(~ method, scales = "free_y", space = "free",
-            strip.position = "top") +
+  facet_wrap(~method, scales = "free_y", 
+            strip.position = "top", ncol=1) +
   geom_tile() +
   geom_point(data=fourth_dat %>% filter(Coef==0), shape="x") +
   # Labels
-  labs(x="Marine heatwave", y="", tag="") +
+  labs(x="Marine heatwave", y="", tag="", fill = "Effect") +
   #scale_fill_mba("drifters2",n_colors=50, type = "continuous", name = "Effect") +
-  scale_fill_gradient2(low = "navyblue",high = "indianred",mid = "gray80")+
+  scale_fill_gradient2(low = "indianred",high = "navyblue",mid = "gray80")+
   guides(fill = guide_colorbar(ticks.colour = "black", frame.colour = "black")) +
   # Theme
   theme_bw() + 
