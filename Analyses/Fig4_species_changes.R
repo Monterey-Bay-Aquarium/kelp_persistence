@@ -22,9 +22,8 @@ upc_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_upc_cov_C
 fish_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_fish_counts_CC.csv"))
 
 #load species attribute table
-spp_attribute <- read.csv(file.path(tabdir,"TableS1_spp_table.csv")) %>% janitor::clean_names() #%>%
-                      #mutate(taxa = ifelse(taxa == "Loxorhynchus crispatus  or scyra acutifrons","Loxorhynchus crispatus scyra acutifrons",taxa)) %>%
-                      #rename("trophic_ecology"="primary_trophic")
+spp_attribute <- read.csv(file.path(tabdir,"TableS1_spp_table.csv")) %>% janitor::clean_names() %>%
+  dplyr::select(-x)
 
 ################################################################################
 #calculate transect means to reduce memory 
@@ -346,11 +345,11 @@ plot_merge <- rbind(swath_pc, fish_pc, upc_pc) %>%
 ################################################################################
 #Plot
 
-my_theme <-  theme(axis.text=element_text(size=8, color = "black"),
+my_theme <-  theme(axis.text=element_text(size=9, color = "black"),
                    axis.text.y = element_text(angle = 90, hjust = 0.5, color = "black"),
-                   axis.title=element_text(size=8, color = "black"),
-                   plot.tag=element_text(size=8, face="plain", color = "black"),
-                   plot.title =element_text(size=7, face="bold", color = "black"),
+                   axis.title=element_text(size=9, color = "black"),
+                   plot.tag=element_text(size=9, face="plain", color = "black"),
+                   plot.title =element_text(size=10, face="bold", color = "black"),
                    # Gridlines 
                    panel.grid.major = element_blank(), 
                    panel.grid.minor = element_blank(),
@@ -360,12 +359,12 @@ my_theme <-  theme(axis.text=element_text(size=8, color = "black"),
                    legend.key = element_blank(),
                    legend.background = element_rect(fill=alpha('blue', 0)),
                    legend.key.height = unit(1, "lines"), 
-                   legend.text = element_text(size = 6, color = "black"),
-                   legend.title = element_text(size = 7, color = "black"),
+                   legend.text = element_text(size = 9, color = "black"),
+                   legend.title = element_text(size = 9, color = "black"),
                    #legend.spacing.y = unit(0.75, "cm"),
                    #facets
                    strip.background = element_blank(),
-                   strip.text = element_text(size = 6 ,face="bold", color = "black", hjust=0),
+                   strip.text = element_text(size = 10 ,face="bold", color = "black", hjust=0),
 )
 
 exhibits <- list(
@@ -556,14 +555,14 @@ combined_plot <- ggpubr::ggarrange(p1, p2, common.legend = TRUE, align = "h")
 
 combined_plot_annotated <- ggpubr::annotate_figure(combined_plot,
                 bottom = ggpubr::text_grob("Percent change", 
-                                   hjust = 4.6, x = 1, size = 10),
+                                   hjust = 3.9, x = 1, size = 12, vjust=-1),
                 left = ggpubr::text_grob("", rot = 90, size = 10, vjust=2)
 )
 
 combined_plot
 
-ggsave(combined_plot_annotated, filename=file.path(figdir, "Fig4_mvabund4.png"), bg = "white",
-       width=8.5, height=10, units="in", dpi=600) 
+ggsave(combined_plot_annotated, filename=file.path(figdir, "Fig4_mvabund.png"), bg = "white",
+       width=8.5, height=10.5, units="in", dpi=600) 
 
 
 
