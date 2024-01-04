@@ -33,7 +33,6 @@ cent <- cent[order(cent$site, cent$year),] %>% mutate(site = as.factor(site))
 ################################################################################
 #test for cohesion
 
-# Empty lists to store results
 cor_site <- list()
 pvalue_site <- list()
 
@@ -98,7 +97,6 @@ for (i in 1:(num_sites - 1)) {
 ################################################################################
 #export table
 
-# Assuming result_table is your data frame
 result_matrix <- reshape2::acast(result_table, site1 ~ site2, value.var = "correlation")
 
 # Format row names
@@ -216,7 +214,7 @@ df <- df %>% mutate(
     TRUE ~ NA
 ))
 
-# Create the heatmap using ggplot2
+# Create the heatmap 
 heatmap <- ggplot(df %>% mutate(Var1 = str_to_title(gsub("_", " ", Var1)),
                                 Var1 = str_replace(Var1, "Dc", "DC"),
                                 Var1 = str_replace(Var1, "Uc", "UC"),
@@ -404,6 +402,5 @@ arranged_plots
 ggsave(filename = file.path(figdir, "FigX_cohesion_new4.png"), plot = arranged_plots, 
        width = 6, height = 9.3, bg = "white", units = "in", dpi = 600)
 
-#change height back to 9 potentially
 
 
