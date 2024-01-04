@@ -53,9 +53,9 @@ kelp_mean <- left_join(kelp_mean, ttest_results, by = "site")
 #plot
 
 # Theme
-my_theme <-  theme(axis.text=element_text(size=7),
+my_theme <-  theme(axis.text=element_text(size=9),
                    axis.text.y = element_text(angle = 90, hjust = 0.5),
-                   axis.title=element_text(size=9),
+                   axis.title=element_text(size=10),
                    plot.tag=element_text(size=9),
                    plot.title =element_text(size=8, face="bold"),
                    # Gridlines 
@@ -179,7 +179,7 @@ g <- ggpubr::ggarrange(panel_A, panel_B, ncol = 1, common.legend = TRUE, legend 
 
 g
 
-ggsave(g, filename=file.path(figdir, "FigX_starting_conditions_new3.png"), 
+ggsave(g, filename=file.path(figdir, "FigS3_starting_conditions.png"), 
        width=7, height=8, units="in", dpi=600, bg="white")
 
 
