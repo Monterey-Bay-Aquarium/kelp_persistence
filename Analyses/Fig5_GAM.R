@@ -265,11 +265,11 @@ resid_dat <- mod_dat %>%
 #plot GAM
 
 my_theme <-  theme(axis.text=element_text(size=8, color = "black"),
-                   axis.text.y = element_text(color = "black",size=6),
-                   axis.text.x = element_text(color = "black",size=6),
-                   axis.title=element_text(size=10, color = "black"),
+                   axis.text.y = element_text(color = "black",size=7),
+                   axis.text.x = element_text(color = "black",size=7),
+                   axis.title=element_text(size=9, color = "black"),
                    plot.tag=element_text(size= 7, color = "black"), #element_text(size=8),
-                   plot.title =element_text(size=8, face="bold", color = "black"),
+                   plot.title =element_text(size=9, face="bold", color = "black"),
                    # Gridlines 
                    panel.grid.major = element_blank(), 
                    panel.grid.minor = element_blank(),
@@ -278,13 +278,13 @@ my_theme <-  theme(axis.text=element_text(size=8, color = "black"),
                    # Legend
                    legend.key = element_blank(),
                    legend.background = element_rect(fill=alpha('blue', 0)),
-                   legend.key.size  = unit(0.5, "lines"), 
-                   legend.text = element_text(size = 6, color = "black"),
-                   legend.title = element_text(size = 7, color = "black"),
+                   legend.key.size  = unit(1, "lines"), 
+                   legend.text = element_text(size = 10, color = "black"),
+                   legend.title = element_text(size = 10, color = "black"),
                    #legend.spacing.y = unit(0.75, "cm"),
                    #facets
                    strip.background = element_blank(),
-                   strip.text = element_text(size = 6 , face="plain", color = "black", vjust=-0.5),
+                   strip.text = element_text(size = 8 , face="plain", color = "black", vjust=-0.5),
                    strip.placement = "outside"
 )
 
@@ -341,25 +341,26 @@ t_test_results <- t_test_data %>%
          label = paste0(ifelse(p.value < 0.001, "p < 0.001", paste("p = ", round(p.value, 3)))))
 
 
-g2 <- ggplot(data = envr_plot,
+g2 <- ggplot(data = envr_plot %>% 
+               mutate(resistance = ifelse(resistance == "transitioned","Transitioned","Persistent")),
              aes(x = resistance, y = val_mean)) +
-  geom_boxplot(color = "black", aes(fill = resistance), show.legend = FALSE) +
+  geom_boxplot(color = "black", aes(fill = resistance), show.legend = TRUE) +
   geom_jitter(width = 0.1, height = 0.3, alpha = 0.2, size=1) +
   geom_text(aes(x = -Inf, y = Inf, 
                 label = t_test_results$label),
             hjust = -0.1, vjust = 1.3, size = 2.5, data = t_test_results, color = t_test_results$color) +
-  facet_wrap(~variable, scales = "free", ncol=3,
+  facet_wrap(~variable, scales = "free", 
              labeller = as_labeller(
                c(
                  "baseline_kelp" = "Baseline kelp density \n(stipes per 60 m²)",
                  "baseline_kelp_cv" = "Baseline kelp \ncoefficient of variation",
-                 "bat_mean" = "Mean depth (m)",
+                 "bat_mean" = "Average \ndepth (m)",
                  "beuti_month_obs" = "Biologically effective \nupwelling index",
                  "npp_ann_mean" = "Net primary \nproductivity",
                  "orb_vmax" = "Orbital velocity",
                  "prop_urch_exp" = "Proportion of purple \nsea urchins exposed",
-                 "slope_mean" = "Reef slope",
-                 "sst_month_obs" = "Sea surface temperature \n mean (°C)",
+                 "slope_mean" = "Reef \nslope",
+                 "sst_month_obs" = "Sea surface \ntemperature (°C)",
                  "urchin_m2" = "Sea urchin density \n(no. per m²)",
                  "vrm_mean" = "Rugosity \n ",
                  "wave_hs_max" = "Wave \nheight (m)"
@@ -367,12 +368,14 @@ g2 <- ggplot(data = envr_plot,
              ),
              strip.position = "left")+
   #ylim(1,4)+
-  labs(x = "Site type", y="", tag = "B", title = "Features of persistent and transitioned forests")+
-  MBAcolors::scale_fill_mba("mba2", type = "discrete", rev=TRUE)+
+  labs(x = "", y="", tag = "B", title = "Features of persistent and transitioned forests")+
+  MBAcolors::scale_fill_mba("mba2", type = "discrete", rev=TRUE, name = "Site type")+
   theme_classic()+
   my_theme+
   scale_x_discrete(labels = c("Persistent", "Transitioned")) +
-  theme(strip.placement = "outside") + 
+  theme(strip.placement = "outside",
+        axis.text.x = element_blank(),
+        legend.position = "bottom") + 
   #geom_blank(aes(y = y_min)) +
   #geom_blank(aes(y = y_max)) + 
   theme(plot.margin = margin(2,5,5,5))
@@ -380,13 +383,13 @@ g2 <- ggplot(data = envr_plot,
 
 
 full_plot <- ggarrange(g,g2, nrow=2,  heights = c(0.4,0.6))
-full_plot
+#full_plot
 
 
 
 
-ggsave(full_plot, filename=file.path(figdir, "Fig5_predictors.png"), 
-       width=7, height=9, bg="white", units="in", dpi=600,
+ggsave(full_plot, filename=file.path(figdir, "Fig5_GAM_predictors.png"), 
+       width=7.5, height=9, bg="white", units="in", dpi=600,
        device = "png")
 
 
