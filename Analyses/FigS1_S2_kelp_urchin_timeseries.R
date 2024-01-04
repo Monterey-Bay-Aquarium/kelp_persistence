@@ -69,7 +69,7 @@ site_year <- swath_raw %>% dplyr::select(year, site) %>% distinct() %>%
 
 # Theme
 my_theme <- theme(
-  axis.text = element_text(size = 6),
+  axis.text = element_text(size = 9),
   axis.text.x = element_text(angle = 45, hjust = 1),
   axis.title = element_text(size = 8),
   plot.tag = element_blank(),
@@ -94,14 +94,14 @@ g <- ggplot(site_year %>% mutate(site = str_to_title(gsub("_", " ", site)),
                             site = str_replace(site, "Uc", "UC")),
        aes(x = year, y = reorder(site, site_order))) +
   geom_tile(fill = "#8B5FBF", colour = "white", alpha=0.7) +
-  labs(x = "Year", y = "Site") +
+  labs(x = "", y = "") +
   scale_x_continuous(breaks = unique(site_year$year), labels = unique(site_year$year)) +
   theme_bw()+
   my_theme
 g
 
-#ggsave(g, filename=file.path(figdir, "FigS1_site_frequency.png"), 
- #      width=6, height=6, units="in", dpi=600)
+ggsave(g, filename=file.path(figdir, "FigS1_site_frequency.png"), 
+       width=6, height=6, units="in", dpi=600)
 
 ################################################################################
 #plot
@@ -134,36 +134,41 @@ my_theme <-  theme(axis.text=element_text(size=6),
 
 
 g <- ggplot(swath_sub %>%
-        mutate(species = ifelse(species == "macrocystis_pyrifera","Giant kelp \n(M. pyrifera)","Purple sea urchins \n(S. purpuratus)"),
-               site = gsub("_", " ", site))
-       , aes(x = year, y = pmax(log(counts), 0.001), fill = species, color=species, group=species)) +
-  geom_point(aes(color = species), alpha = 0.2, size=0.5) +
+              mutate(species = ifelse(species == "macrocystis_pyrifera", "Giant kelp~(italic('M. pyrifera'))", "Purple sea urchins~(italic('S. purpuratus'))"),
+                     site = gsub("_", " ", site))
+            , aes(x = year, y = pmax(log(counts), 0.001), fill = species, color = species, group = species)) +
+  geom_point(aes(color = species), alpha = 0.2, size = 0.5) +
   geom_smooth(method = "auto", se = TRUE, size = 0.5, aes(group = species, color = species), alpha = 0.3, inherit.aes = TRUE) +
-  #SSW
-  geom_vline(xintercept = 2013, linetype = "dotted", size=0.3)+
-  annotate(geom="text", label="SSW", x=2010, y=10 , size=2) +
+  # SSW
+  geom_vline(xintercept = 2013, linetype = "dotted", size = 0.3) +
+  annotate(geom = "text", label = "SSW", x = 2010, y = 10, size = 2) +
   annotate("segment", x = 2011.8, y = 9.8, xend = 2012.7, yend = 8.8,
-           arrow = arrow(type = "closed", length = unit(0.02, "npc")))+
-  #define MHW period
+           arrow = arrow(type = "closed", length = unit(0.02, "npc"))) +
+  # Define MHW period
   # Heatwave
-  annotate(geom="rect", xmin=2014, xmax=2016, ymin=-Inf, ymax=Inf, fill="indianred1", alpha=0.2) +
-  annotate(geom="text", label="MHW", x=2018.5, y=10 , size=2) +
+  annotate(geom = "rect", xmin = 2014, xmax = 2016, ymin = -Inf, ymax = Inf, fill = "indianred1", alpha = 0.2) +
+  annotate(geom = "text", label = "MHW", x = 2018.5, y = 10, size = 2) +
   annotate("segment", x = 2016.5, y = 10, xend = 2015, yend = 10,
-           arrow = arrow(type = "closed", length = unit(0.02, "npc")))+
-  #
+           arrow = arrow(type = "closed", length = unit(0.02, "npc"))) +
   facet_wrap(~ site, scales = "free") +
-  scale_color_manual(values = c("forestgreen", "purple")) +
-  scale_fill_manual(values = c("forestgreen", "purple")) +
+  scale_color_manual(values = c("forestgreen", "purple"),
+                     labels = c(expression("Giant kelp" ~ italic("(M. pyrifera)")),
+                                expression("Purple sea urchins" ~ italic("(S. purpuratus)")))) +
+  scale_fill_manual(values = c("forestgreen", "purple"),
+                    labels = c(expression("Giant kelp" ~ italic("(M. pyrifera)")),
+                               expression("Purple sea urchins" ~ italic("(S. purpuratus)")))) +
   ylim(-1, 10) +
-  labs(fill = "Species", color = "Species")+
-  ylab("Log density (No. individuals per 60 m²)")+
-  xlab("Year")+
+  labs(fill = "Species", color = "Species") +
+  ylab("Log density (No. individuals per 60 m²)") +
+  xlab("Year") +
   my_theme + theme(legend.position = "top")
+
+
 
 g
 
 # Export figure
-ggsave(g, filename=file.path(figdir, "FigS1_urchin_kelp_timeseries.png"), 
+ggsave(g, filename=file.path(figdir, "FigS2_urchin_kelp_timeseries.png"), 
       width=6.5, height=7, units="in", dpi=600)
 
 ################################################################################
