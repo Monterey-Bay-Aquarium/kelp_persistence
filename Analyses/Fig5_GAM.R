@@ -226,7 +226,7 @@ plot <- plot +
 
 #print(plot)
 
-ggsave(file.path(tabdir, "TableS3_GAM_results.png"), plot, dpi = 600,
+ggsave(file.path(tabdir, "TableS4_GAM_results.png"), plot, dpi = 600,
        bg = "white", width = 4, height = 6, units = "in")
 
 
@@ -264,10 +264,10 @@ resid_dat <- mod_dat %>%
 ################################################################################
 #plot GAM
 
-my_theme <-  theme(axis.text=element_text(size=4, color = "black"),
+my_theme <-  theme(axis.text=element_text(size=8, color = "black"),
                    axis.text.y = element_text(color = "black",size=6),
                    axis.text.x = element_text(color = "black",size=6),
-                   axis.title=element_text(size=7, color = "black"),
+                   axis.title=element_text(size=10, color = "black"),
                    plot.tag=element_text(size= 7, color = "black"), #element_text(size=8),
                    plot.title =element_text(size=8, face="bold", color = "black"),
                    # Gridlines 
@@ -306,7 +306,7 @@ g <- ggplot(sm_dat) +
   geom_line(aes(x = var_val, y = est), lwd = 0.8) +
   facet_wrap(~factor(smooth, levels = c("Prop urch exp", "Baseline kelp","Sst month obs", "Npp ann mean")), scales = "free", nrow = 1,
              labeller = as_labeller(
-               c("Prop urch exp" = "Proportion of exposed \npurple sea urchins", "Baseline kelp" = "Baseline kelp density \n(stipes per 60 m²)", "Npp ann mean" = "Net primary productivity \n(annual mean)",
+               c("Prop urch exp" = "Proportion of purple \nsea urchins exposed", "Baseline kelp" = "Baseline kelp density \n(stipes per 60 m²)", "Npp ann mean" = "Net primary productivity \n(annual mean)",
                  "Sst month obs" = "Sea surface \ntemperature (°C)")), 
              strip.position = "bottom"
   )+
@@ -314,7 +314,7 @@ g <- ggplot(sm_dat) +
   geom_text(aes(x = -Inf, y = Inf, 
                 label = pval$label),
             hjust = -0.1, vjust = 1.3, size = 2.5, data = pval, color = "black") +
-  labs(y = "Partial effect", x  = "Model predictor", fill = "Scaled residual \ndensity", tag = "A",
+  labs(y = "Partial effect", x  = "", fill = "Scaled residual \ndensity", tag = "A",
        title = "Predictors of kelp density")+
   theme_bw() + my_theme + theme(plot.margin = margin(5,5,0,30),
                                 plot.tag.position = c(-.045, 1))
@@ -331,8 +331,8 @@ envr_plot <- mod_dat %>%
 
 
 # Perform t-test for each variable
-t_test_data <- t_results %>%
-  select(variable, resistance, val_mean, site)
+t_test_data <- envr_plot %>%
+  dplyr::select(variable, resistance, val_mean, site)
 
 t_test_results <- t_test_data %>%
   group_by(variable) %>%
@@ -348,7 +348,7 @@ g2 <- ggplot(data = envr_plot,
   geom_text(aes(x = -Inf, y = Inf, 
                 label = t_test_results$label),
             hjust = -0.1, vjust = 1.3, size = 2.5, data = t_test_results, color = t_test_results$color) +
-  facet_wrap(~variable, scales = "free", 
+  facet_wrap(~variable, scales = "free", ncol=3,
              labeller = as_labeller(
                c(
                  "baseline_kelp" = "Baseline kelp density \n(stipes per 60 m²)",
@@ -357,7 +357,7 @@ g2 <- ggplot(data = envr_plot,
                  "beuti_month_obs" = "Biologically effective \nupwelling index",
                  "npp_ann_mean" = "Net primary \nproductivity",
                  "orb_vmax" = "Orbital velocity",
-                 "prop_urch_exp" = "Proportion of \nexposed sea urchins",
+                 "prop_urch_exp" = "Proportion of purple \nsea urchins exposed",
                  "slope_mean" = "Reef slope",
                  "sst_month_obs" = "Sea surface temperature \n mean (°C)",
                  "urchin_m2" = "Sea urchin density \n(no. per m²)",
@@ -385,8 +385,8 @@ full_plot
 
 
 
-ggsave(full_plot, filename=file.path(figdir, "Fig5_predictors_new9.png"), 
-       width=7, height=7.5, bg="white", units="in", dpi=600,
+ggsave(full_plot, filename=file.path(figdir, "Fig5_predictors.png"), 
+       width=7, height=9, bg="white", units="in", dpi=600,
        device = "png")
 
 
