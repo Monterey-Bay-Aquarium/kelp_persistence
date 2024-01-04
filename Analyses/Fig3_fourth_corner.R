@@ -272,11 +272,11 @@ fourth_dat <- rbind(coef_swath, coef_fish, coef_upc) %>%
 
 
 # Theme
-my_theme <-  theme(axis.text=element_text(size=8, color = "black"),
+my_theme <-  theme(axis.text=element_text(size=7, color = "black"),
                    axis.text.y = element_text(color ="black"),
-                   axis.title=element_text(size=10, color = "black"),
-                   plot.tag= element_text(size=8, color = "black"),
-                   plot.title =element_text(size=10, face="italic", color = "black"),
+                   axis.title=element_text(size=7, color = "black"),
+                   plot.tag= element_text(size=7, color = "black"),
+                   plot.title =element_text(size=7, face="italic", color = "black"),
                    # Gridlines 
                    panel.grid.major = element_blank(), 
                    panel.grid.minor = element_blank(),
@@ -286,12 +286,12 @@ my_theme <-  theme(axis.text=element_text(size=8, color = "black"),
                    legend.key = element_blank(),
                    legend.background = element_rect(fill=alpha('blue', 0)),
                    legend.key.height = unit(1, "lines"), 
-                   legend.text = element_text(size = 6, color = "black"),
-                   legend.title = element_text(size = 7, color = "black"),
+                   legend.text = element_text(size = 5, color = "black"),
+                   legend.title = element_text(size = 6, color = "black"),
                    #legend.spacing.y = unit(0.75, "cm"),
                    #facets
                    strip.background = element_blank(),
-                   strip.text = element_text(size = 8 ,face="bold", color = "black", hjust =0),
+                   strip.text = element_text(size = 7 ,face="bold", color = "black", hjust =0),
 )
 
 
@@ -302,7 +302,7 @@ g <- ggplot(fourth_dat, aes(x = `Heatwave period`, y = `Trophic ecology`, fill =
   geom_tile() +
   geom_point(data=fourth_dat %>% filter(Coef==0), shape="x") +
   # Labels
-  labs(x="Marine heatwave", y="", tag="", fill = "Effect") +
+  labs(x="MHW period", y="", tag="", fill = "Effect") +
   #scale_fill_mba("drifters2",n_colors=50, type = "continuous", name = "Effect") +
   scale_fill_gradient2(low = "indianred",high = "navyblue",mid = "gray80")+
   guides(fill = guide_colorbar(ticks.colour = "black", frame.colour = "black")) +
