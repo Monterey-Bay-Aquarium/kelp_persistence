@@ -53,8 +53,8 @@ kelp_fish_build1 <- kelp_fish_counts_raw %>%
   #per PI, drop canopy surveys (these were not consistently surveyed across years)
   #and merge mid and bottom transect
   filter(!(level == "CAN" | level =="CNMD"))%>%
-  group_by(year, site, zone, transect, classcode, total_count)%>%
-  summarize(total_count = sum(total_count))
+  group_by(year, site, zone, transect, classcode)%>%
+  dplyr::summarize(total_count = sum(total_count))
   
 #join species names by class code 
 kelp_fish_build2 <- left_join(kelp_fish_build1, kelp_taxon, by="classcode")
@@ -393,14 +393,15 @@ kelp_upc_build11 <- kelp_upc_build10 %>%
 
 #Export
 write.csv(kelp_fish_build8,file.path(output, "kelp_fish_counts_CC.csv"), row.names = FALSE)
-
-#last write 30 Oct 2023
+#last write 4 Jan 2024
 
 #Export
 write.csv(kelp_swath_build9,file.path(output, "kelp_swath_counts_CC.csv"), row.names = FALSE)
+#last write 4 Jan 2024
 
 #Export
 write.csv(kelp_upc_build11,file.path(output, "kelp_upc_cov_CC.csv"), row.names = FALSE)
+#last write 4 Jan 2024
 
 
 

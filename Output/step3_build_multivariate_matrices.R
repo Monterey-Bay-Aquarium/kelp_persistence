@@ -79,7 +79,7 @@ stan_untrans_ord <- metaMDS(stan_untransformed_distmat, distance = "bray", paral
 save(file = paste(file.path(basedir,"multivariate_data.Rdata")),stan_dat, stan_group_vars, stan_ord,
    stan_ord_dat, stan_rel, stan_max_distmat)
 
-#last write 31 Oct 2023
+#last write 4 Jan 2024
 
 
 

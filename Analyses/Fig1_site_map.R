@@ -5,7 +5,7 @@ rm(list=ls())
 
 librarian::shelf(tidyverse, here, tidyverse, tidync, sf, raster, terra, ggtext, ggsn)
 
-
+###MUST RUN FigS1_kelp_urchin_timeseries before code below
 
 ################################################################################
 #set directories and load data

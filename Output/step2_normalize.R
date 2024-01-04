@@ -99,9 +99,8 @@ nrow(swath_stan1)
 nrow(kelp_stan_all)
 
 #export
-write.csv(kelp_stan_all,file.path(here::here("analyses","4patch_drivers","Output"),"kelp_stan_CC.csv"), row.names = FALSE)
-
-#last write 30 Oct 2023
+write.csv(kelp_stan_all,file.path(here::here("output","monitoring_data","processed"),"kelp_stan_CC.csv"), row.names = FALSE)
+#last write 4 Jan 2024
 
 
 
