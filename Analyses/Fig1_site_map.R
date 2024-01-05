@@ -108,7 +108,6 @@ g1_inset <-  ggplotGrob(
 g1_inset
 
 
-###MUST RUN FigS1_kelp_urchin_timeseries
 g2_inset <- ggplotGrob(g1)
 
 # Create the "Monterey" text label
@@ -118,7 +117,7 @@ monterey_label <- data.frame(
   label = c("Monterey \nBay", "Carmel \nBay")
 )
 
- # Plot the county boundaries and site locations with non-overlapping labels
+ # Plot the county boundaries and site locations 
 map <- ggplot() +
   geom_sf(data = ca_counties) +
   geom_sf(data = site_locations_sf) +
