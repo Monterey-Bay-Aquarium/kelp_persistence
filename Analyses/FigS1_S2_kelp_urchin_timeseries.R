@@ -130,9 +130,6 @@ my_theme <-  theme(axis.text=element_text(size=6),
                    )
 
 
-# create a new column for the site factor with levels ordered by kelp_mean
-
-
 g <- ggplot(swath_sub %>%
               mutate(species = ifelse(species == "macrocystis_pyrifera", "Giant kelp~(italic('M. pyrifera'))", "Purple sea urchins~(italic('S. purpuratus'))"),
                      site = gsub("_", " ", site))

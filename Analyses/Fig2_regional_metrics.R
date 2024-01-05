@@ -90,7 +90,7 @@ plot(1:13, wss, type="b", xlab="Number of clusters", ylab="Within groups sum of 
 # Create a data frame for plotting
 df <- data.frame(NumClusters = 1:13, WSS = wss)
 
-# Plot using ggplot2
+# Plot 
 elbow_plot <- ggplot(df, aes(x = NumClusters, y = WSS)) +
   geom_line(size=0.5) +
   geom_point(size=1) +
@@ -260,7 +260,7 @@ my_theme <-  theme(axis.text=element_text(size=10, color = "black"),
                    axis.text.y = element_text(angle = 90, hjust = 0.5, color = "black"),
                    axis.title=element_text(size=10, color = "black"),
                    plot.tag=element_text(size=8, color = "black"),
-                   plot.title =element_text(size=8, face="bold", color = "black"),
+                   plot.title =element_text(size=10, face="bold", color = "black"),
                    # Gridlines 
                    panel.grid.major = element_blank(), 
                    panel.grid.minor = element_blank(),
@@ -270,8 +270,8 @@ my_theme <-  theme(axis.text=element_text(size=10, color = "black"),
                    legend.key = element_blank(),
                    legend.background = element_rect(fill=alpha('blue', 0)),
                    legend.key.height = unit(1, "lines"), 
-                   legend.text = element_text(size = 7, color = "black"),
-                   legend.title = element_text(size = 8, color = "black"),
+                   legend.text = element_text(size = 8, color = "black"),
+                   legend.title = element_text(size = 9, color = "black"),
                    #legend.spacing.y = unit(0.75, "cm"),
                    #facets
                    strip.background = element_blank(),
@@ -325,7 +325,7 @@ shannon <- ggplot() +
   annotate(geom = "rect", xmin = 2014, xmax = 2016, ymin = -Inf, ymax = Inf, fill = "indianred1", alpha = 0.2) +
   theme_bw() + my_theme +
   labs(color = "Taxa", fill = "Taxa") +
-  ylab("Shannon diversity") +
+  ylab("Diversity (Shannon)") +
   xlab("Year") +
   ggtitle("Shannon diversity") +
   guides(color = guide_legend(keyheight = unit(1.1, "lines")), fill = guide_legend(keyheight = unit(1.1, "lines")))+
@@ -389,7 +389,7 @@ richness <- ggplot()+
   annotate(geom="rect", xmin=2014, xmax=2016, ymin=-Inf, ymax=Inf, fill="indianred1", alpha=0.2) +
   theme_bw() + my_theme +
   labs(color = "Taxa", fill = "Taxa")+
-  ylab("Taxonomic richness (n)")+
+  ylab("Richness (n)")+
   xlab("Year")+
   ggtitle("Taxonomic richness")+
   guides(color = guide_legend(keyheight = unit(1.1, "lines")), fill = guide_legend(keyheight = unit(1.1, "lines")))+
@@ -426,7 +426,7 @@ evenness <- ggplot()+
   annotate(geom="rect", xmin=2014, xmax=2016, ymin=-Inf, ymax=Inf, fill="indianred1", alpha=0.2) +
   theme_bw() + my_theme +
   labs(color = "Taxa", fill = "Taxa")+
-  ylab("Taxonomic evenness (n)")+
+  ylab("Evenness (n)")+
   xlab("Year")+
   ggtitle("Taxonomic evenness")+
   scale_y_continuous(labels = scales::number_format(accuracy = 0.1)) +
@@ -457,7 +457,7 @@ region_wide_plot <- ggpubr::ggarrange(stan_trajectory, combined_plot, ncol=2, wi
 cen_plot <- ggplot(cen_distance, aes(x = as.numeric(as.character(year)), y = distance, group = site)) +
   geom_line(aes(color = "Sites (n=24)"), alpha = 0.7) +
   geom_smooth(aes(color = "Median", group = 1), method = "loess", span = 0.4, alpha = 0.8) +
-  labs(x = "Year", y = "Distance (Euclidean) to 2007-2013 centroid", tag = "B",
+  labs(x = "Year", y = "Multivariate distance to 2007-2013 centroid", tag = "B",
        title = "Temporal stability",
        color = "") +  # Set the legend title here
   scale_color_manual(values = c("Median" = "black","Sites (n=24)" = "lightblue")) +
@@ -487,7 +487,7 @@ final_plot <- ggpubr::ggarrange(left, combined_plot, ncol=2)
 
 final_plot
 
-ggsave(final_plot, filename=file.path(figdir, "Fig3_regional_metrics_new8.png"), bg = "white",
+ggsave(final_plot, filename=file.path(figdir, "Fig2_regional_metrics.png"), bg = "white",
    width=8, height=7.5, units="in", dpi=600) 
 
 
