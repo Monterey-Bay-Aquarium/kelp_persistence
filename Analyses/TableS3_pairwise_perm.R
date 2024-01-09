@@ -89,6 +89,6 @@ site_result_tab <- pair_perm %>% map_dfr(~tidy(.x), .id="name")%>%
 
 
 
-write.csv(site_result_tab, file.path(tab_dir, "TableS2_pairwise_permanova.csv"), row.names = FALSE)
+write.csv(site_result_tab, file.path(tab_dir, "TableS3_pairwise_permanova.csv"), row.names = FALSE)
 
 
