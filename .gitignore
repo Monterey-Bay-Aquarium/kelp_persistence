@@ -2,3 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
+#archived filed
+Tables/archive/
+Figures/archive
+Figures/gganimate
+Analyses/archive
