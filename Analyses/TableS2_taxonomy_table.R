@@ -197,7 +197,7 @@ spp_table_full1 <- rbind(spp_table_full1, missing_taxa)
 
 
 
-write.csv(spp_table_full1, file.path(tabdir, "TableS1_spp_table.csv"), row.names = TRUE)
+write.csv(spp_table_full1, file.path(tabdir, "TableS2_taxonomy_table.csv"), row.names = TRUE)
 
 
 
