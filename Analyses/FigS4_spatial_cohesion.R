@@ -118,7 +118,7 @@ result_matrix <- result_matrix %>%
   as.matrix()%>%
   apply(2, function(x) ifelse(is.na(x), "-", as.character(round(as.numeric(x), 2))))
 
-#write.csv(result_matrix, file = file.path(tabdir,"TableS3_procrutes_cor.csv"), row.names = TRUE)
+#write.csv(result_matrix, file = file.path(tabdir,"procrutes_correlation.csv"), row.names = TRUE)
 
 ################################################################################
 #Plot
@@ -399,7 +399,7 @@ arranged_plots
 
 
 # Save the plot
-ggsave(filename = file.path(figdir, "FigX_cohesion_new4.png"), plot = arranged_plots, 
+ggsave(filename = file.path(figdir, "FigS4_cohesion.png"), plot = arranged_plots, 
        width = 6, height = 9.3, bg = "white", units = "in", dpi = 600)
 
 
