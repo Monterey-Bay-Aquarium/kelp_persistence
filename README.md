@@ -1,17 +1,15 @@
 # kelp_persistence
 This is the GitHub repository for a project led by Monterey Bay Aquarium aimed at understanding the community-wide consequences of kelp forest loss and 
-the predictors of persistence through multiple stressors. The analyses and code in this respository support the findings presented in Smith et al. 2023 (in review)
+the predictors of persistence through multiple stressors. The analyses and code in this respository support the findings presented in Smith et al. 2024
 
 ## Respository structure 
 
 The GitHub repository contains all of the code associated with the project and the figures produced by this code. 
 
-The data for the project are kept in a server outside the GitHub repository. Non-confidential data will be made available in a public data repository upon project completion.
-
 The GitHub repository has the following structure
 
-* **output:** This folder contains subfolders for each dataset used in the project. The subfolders contain scripts that clean and visualize the data. Figures for visualizing each dataset are contained within a *figures* folder inside each subfolder.
-* **analyses:** This folder contains subfolders that contain the analyses conducted in the paper.
+* **output:** The root level of this folder contains processing script for raw data and subfolders for each derived dataset. The 'raw' subfolders contain datasets obtained directly from published sources or by request. The 'processed' folders contain the derived datasets. 
+* **analyses:** This folder contains scripts for each figure and analysis conducted in the paper.
 * **figures:** This folder contains all of the high-res figures presented in the paper.
 * **tables:** This folder contains all of the tables presented in the paper.
 
