@@ -8,7 +8,7 @@ The GitHub repository contains all of the code associated with the project and t
 
 The GitHub repository has the following structure
 
-* **output:** The root level of this folder contains processing script for raw data and subfolders for each derived dataset. The 'raw' subfolders contain datasets obtained directly from published sources or by request. The 'processed' folders contain the derived datasets. 
+* **output:** The root level of this folder contains processing script for raw data, and subfolders for each derived dataset. The 'raw' subfolders contain datasets obtained directly from published sources or by request. The 'processed' folders contain the datasets derived from the processing scripts. 
 * **analyses:** This folder contains scripts for each figure and analysis conducted in the paper.
 * **figures:** This folder contains all of the high-res figures presented in the paper.
 * **tables:** This folder contains all of the tables presented in the paper.
