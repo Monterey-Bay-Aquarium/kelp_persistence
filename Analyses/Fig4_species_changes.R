@@ -22,7 +22,7 @@ upc_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_upc_cov_C
 fish_raw <- read.csv(file.path(basedir, "monitoring_data/processed/kelp_fish_counts_CC.csv"))
 
 #load species attribute table
-spp_attribute <- read.csv(file.path(tabdir,"TableS1_spp_table.csv")) %>% janitor::clean_names() %>%
+spp_attribute <- read.csv(file.path(tabdir,"TableS2_taxonomy_table.csv")) %>% janitor::clean_names() %>%
   dplyr::select(-x)
 
 ################################################################################

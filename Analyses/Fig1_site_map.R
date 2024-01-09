@@ -180,7 +180,7 @@ map <- ggplot() +
 map
 
 
-ggsave(map, filename=file.path(figdir, "Fig1_site_map_newv2.png"), bg = "white",
+ggsave(map, filename=file.path(figdir, "Fig1_site_map.png"), bg = "white",
        width=7.5, height=6, units="in", dpi=600) 
 
 

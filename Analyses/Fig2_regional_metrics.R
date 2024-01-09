@@ -100,7 +100,7 @@ elbow_plot <- ggplot(df, aes(x = NumClusters, y = WSS)) +
                      axis.title = element_text(size=8))
 
 
-#ggsave(elbow_plot, filename=file.path(figdir, "FigSX_elbow_plot.png"), bg = "white",
+#ggsave(elbow_plot, filename=file.path(figdir, "FigS5_elbow_plot.png"), bg = "white",
  #      width=4, height=4, units="in", dpi=600) 
 
 
