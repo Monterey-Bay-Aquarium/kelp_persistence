@@ -171,9 +171,9 @@ ggsave(g, filename=file.path(figdir, "FigS2_urchin_kelp_timeseries.png"),
 ################################################################################
 #plot region
 # Theme
-my_theme <-  theme(axis.text=element_text(size=8),
+my_theme <-  theme(axis.text=element_text(size=9),
                    axis.text.y = element_text(angle = 90, hjust = 0.5),
-                   axis.title=element_text(size=8),
+                   axis.title=element_text(size=10),
                    plot.tag=element_blank(), #element_text(size=8),
                    plot.title =element_text(size=9, face="bold"),
                    # Gridlines 
@@ -219,12 +219,12 @@ g1 <- ggplot(swath_sub_site %>%
                                                           fill = "Sea urchins \n(S. purpuratus)"), alpha = 0.3, inherit.aes = TRUE) +
   #SSW
   geom_vline(xintercept = 2013, linetype = "dotted", size=0.3)+
-  annotate(geom="text", label="SSW", x=2011, y=200 , size=2) +
+  annotate(geom="text", label="SSW", x=2011, y=200 , size=3) +
   annotate("segment", x = 2011.8, y = 198, xend = 2012.7, yend = 188,
            arrow = arrow(type = "closed", length = unit(0.02, "npc")))+
   # Heatwave
   annotate(geom="rect", xmin=2014, xmax=2016, ymin=-Inf, ymax=Inf, fill="indianred1", alpha=0.2) +
-  annotate(geom="text", label="MHW", x=2017.5, y=200 , size=2) +
+  annotate(geom="text", label="MHW", x=2017.5, y=200 , size=3) +
   annotate("segment", x = 2016.5, y = 200, xend = 2015, yend = 200,
            arrow = arrow(type = "closed", length = unit(0.02, "npc")))+
   scale_color_manual(values = c("Kelp \n(M. pyrifera)" = "forestgreen", "Sea urchins \n(S. purpuratus)" = "purple")) +
@@ -273,6 +273,7 @@ g1 <- g1 +
   scale_x_continuous(
     name = expression("Year")
   )
+g1
 
-
-
+ggsave(g1, filename=file.path(figdir, "Fig1_inset_only.png"), 
+       width=6, height=5, units="in", dpi=600)
